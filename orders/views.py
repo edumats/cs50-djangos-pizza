@@ -9,6 +9,7 @@ from .models import *
 def index(request):
     if not request.user.is_authenticated:
         return render(request, "users/login.html", {"message": None})
+
     context = {
         "user": request.user,
         "pastas": Pasta.objects.all()
