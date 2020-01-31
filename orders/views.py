@@ -15,17 +15,3 @@ def index(request):
         "pastas": Pasta.objects.all()
     }
     return render(request, "orders/index.html", context)
-
-def login_view(request):
-    username = request.POST["username"]
-    password = request.POST["password"]
-    user = authenticate(request, username=username, password=password)
-    if User is not None:
-        login(request, user)
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        return render(request, "users/login.html", {"message": "Invalid credentials."})
-
-def logout_view(request):
-    logout(request)
-    return render(request, "users/login.html", {"message": "Logged out."})
