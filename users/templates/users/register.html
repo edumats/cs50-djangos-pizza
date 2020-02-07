@@ -1,0 +1,18 @@
+{% extends "orders/layout.html" %}
+{% load crispy_forms_tags %}
+{% block title %}
+    Register: Django's Pizza
+{% endblock %}
+
+{% block body %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form|crispy }}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <small class="text-muted">
+        Already have an account? <a href="{% url 'login' %}">Log in here</a>
+    </small>
+{% endblock %}
