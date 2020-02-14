@@ -6,4 +6,5 @@ from users import views as user_views
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("regular-pizza", views.regular, name="regular")
 ]

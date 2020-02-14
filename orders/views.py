@@ -15,3 +15,6 @@ def index(request):
         "pastas": Pasta.objects.all()
     }
     return render(request, "orders/index.html", context)
+
+def regular(request):
+    return render(request, "orders/regular-pizza.html")

@@ -1,0 +1,11 @@
+{% extends "orders/layout.html" %}
+{% block title %}
+    Logout: Django's Pizza
+{% endblock %}
+
+{% block body %}
+    <h2>Logged out</h2>
+    <small class="text-muted">
+        <a href="{% url 'login' %}">Log in again</a>
+    </small>
+{% endblock %}

@@ -36,6 +36,7 @@ class Pizza(models.Model):
         ('S', 'Small'),
         ('L', 'Large')
     ]
+    choice = models.CharField(max_length=2, choices=PIZZA_CHOICES, default='RP')
     size = models.CharField(max_length=1, choices=PIZZA_SIZES)
     type = models.ManyToManyField('PizzaType')
     price = models.DecimalField(max_digits=5, decimal_places=2)
