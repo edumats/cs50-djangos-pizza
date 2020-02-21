@@ -17,8 +17,11 @@ def index(request):
     apps.all_models['orders']
 
     dishes = {
-        "Pastas": Pasta.objects.all(),
-        "Pizzas": Pizza.objects.all()
+        "Pizzas": PizzaChoice.objects.all(),
+        "Subs": SubType.objects.all(),
+        "Pasta": Pasta.objects.all(),
+        "Salads": Salad.objects.all(),
+        "Dinner Platters": Dinner.objects.all()
     }
     return render(request, "orders/index.html", {"dishes": dishes})
 
