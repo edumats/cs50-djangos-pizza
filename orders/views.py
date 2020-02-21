@@ -3,6 +3,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
+# For getting model names
+from django.apps import apps
+
 from .models import *
 
 # Create your views here.
@@ -10,11 +13,14 @@ def index(request):
     if not request.user.is_authenticated:
         return render(request, "users/login.html", {"message": None})
 
-    context = {
-        "user": request.user,
-        "pastas": Pasta.objects.all()
+    # To get list of model names
+    apps.all_models['orders']
+
+    dishes = {
+        "Pastas": Pasta.objects.all(),
+        "Pizzas": Pizza.objects.all()
     }
-    return render(request, "orders/index.html", context)
+    return render(request, "orders/index.html", {"dishes": dishes})
 
 def regular(request):
     return render(request, "orders/regular-pizza.html")

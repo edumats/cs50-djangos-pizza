@@ -38,12 +38,12 @@ class Pizza(models.Model):
     ]
     choice = models.CharField(max_length=2, choices=PIZZA_CHOICES, default='RP')
     size = models.CharField(max_length=1, choices=PIZZA_SIZES)
-    type = models.ManyToManyField('PizzaType')
+    type = models.ForeignKey('PizzaType', on_delete=models.CASCADE, related_name='pizzas', default=0)
     price = models.DecimalField(max_digits=5, decimal_places=2)
-    toppings = models.ManyToManyField('PizzaTopping')
+    toppings = models.ManyToManyField('PizzaTopping', related_name='pizzas')
 
     def __str__(self):
-        return f"{self.type} - Size: {self.size} - Toppings: {self.toppings} : $ {self.price}"
+        return f"{self.type} - Size: {self.size} - Toppings: {' - '.join([str(topping) for topping in self.toppings.all()])} : $ {self.price}"
 
 class PizzaTopping(models.Model):
     name = models.CharField(max_length=70)
@@ -63,12 +63,12 @@ class Sub(models.Model):
         ('L', 'Large')
     ]
     size = models.CharField(max_length=1, choices=SUB_SIZES)
-    type = models.ForeignKey('SubType', on_delete=models.CASCADE)
-    topping = models.ManyToManyField('SubTopping')
+    type = models.ForeignKey('SubType', on_delete=models.CASCADE, related_name='subs')
+    toppings = models.ManyToManyField('SubTopping', related_name='subs')
     price = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
-        return f"{self.type} - Size: {self.size} - Toppings: {self.toppings} : $ {self.price}"
+        return f"{self.type} - Size: {self.size} - Toppings: {' - '.join([str(topping) for topping in self.toppings.all()])} : $ {self.price}"
 
 class SubTopping(models.Model):
     name = models.CharField(max_length=70)
