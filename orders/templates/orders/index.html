@@ -19,9 +19,12 @@
                                 <div class="col-8">
                                     <div class="card-body">
                                         <h5 class="card-title">{{ dish.name }}</h5>
+                                        {% if dish.type %}
+                                        <h6>{{ dish.get_type_display }} Pizza</h6>
+                                        {% endif %}
                                     </div>
                                 </div>
-                                <a href="#" class="stretched-link"></a>
+                                <a href="{{ dish.get_absolute }}" class="stretched-link"></a>
                             </div>
                         </div>
                     </div>

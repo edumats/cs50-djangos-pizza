@@ -17,13 +17,13 @@ def index(request):
     apps.all_models['orders']
 
     dishes = {
-        "Pizzas": PizzaChoice.objects.all(),
-        "Subs": SubType.objects.all(),
+        "Pizzas": Pizza.objects.all(),
+        "Subs": Sub.objects.all(),
         "Pasta": Pasta.objects.all(),
         "Salads": Salad.objects.all(),
         "Dinner Platters": Dinner.objects.all()
     }
     return render(request, "orders/index.html", {"dishes": dishes})
 
-def regular(request):
-    return render(request, "orders/regular-pizza.html")
+def products(request, slug):
+    return render(request, "orders/products.html")

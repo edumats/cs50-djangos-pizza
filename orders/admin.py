@@ -2,13 +2,14 @@ from django.contrib import admin
 
 from .models import *
 
-admin.site.register(Salad)
-admin.site.register(Dinner)
-admin.site.register(Pasta)
-admin.site.register(Pizza)
-admin.site.register(PizzaChoice)
+# Auto populate the slug field with the field name when adding through admin
+class DishAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
+
+admin.site.register(Salad, DishAdmin)
+admin.site.register(Dinner, DishAdmin)
+admin.site.register(Pasta, DishAdmin)
+admin.site.register(Pizza, DishAdmin)
 admin.site.register(PizzaTopping)
-admin.site.register(PizzaType)
-admin.site.register(Sub)
+admin.site.register(Sub, DishAdmin)
 admin.site.register(SubTopping)
-admin.site.register(SubType)
