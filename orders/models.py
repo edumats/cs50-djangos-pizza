@@ -1,5 +1,5 @@
 from django.db import models
-
+from model_utils.managers import InheritanceManager
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
@@ -8,11 +8,25 @@ class Product(models.Model):
     image = models.URLField(default='https://via.placeholder.com/150')
     description = models.CharField(max_length=500, blank=True)
 
+    # for the django-model-utils InheritanceManager to work
+    objects = InheritanceManager()
+
+    # for the downcast function to work
+    _downcast = None
+
     def __str__(self):
         return f"{self.name}"
 
     def get_absolute(self):
         return f"/products/{self.slug}"
+
+    # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
+    def downcast(self):
+        if self._downcast is None:
+            if hasattr(self, 'sub'):
+                self._downcast = self.sub
+
+        return self._downcast
 
 class Dinner(Product):
     DINNER_SIZES = [
