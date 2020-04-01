@@ -6,5 +6,6 @@ from users import views as user_views
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("products/<slug:slug>", views.products, name="products")
+    path("products/custom-pizza", views.custom_pizza, name="custom-pizza"),
+    path("products/<slug:slug>", views.products, name="products"),
 ]

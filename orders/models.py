@@ -2,11 +2,12 @@ from django.db import models
 from model_utils.managers import InheritanceManager
 
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     slug = models.SlugField(max_length=120, unique=True)
     image = models.URLField(default='https://via.placeholder.com/150')
     description = models.CharField(max_length=500, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
 
     # for the django-model-utils InheritanceManager to work
     objects = InheritanceManager()
@@ -18,7 +19,7 @@ class Product(models.Model):
         return f"{self.name}"
 
     def get_absolute(self):
-        return f"/products/{self.slug}"
+        return f"/products/{self.slug}" # Remember to add a category before the slug for easier queries
 
     # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
     def downcast(self):
@@ -33,7 +34,7 @@ class Dinner(Product):
         ('S', 'Small'),
         ('L', 'Large')
     ]
-    size = models.CharField(max_length=1, choices=DINNER_SIZES)
+    size = models.CharField(max_length=1, choices=DINNER_SIZES, help_text="Choose the size")
 
     def __str__(self):
         return f"{self.name} - Size: {self.size} - $ {self.price}"
@@ -55,16 +56,23 @@ class Pizza(Product):
         ('S', 'Small'),
         ('L', 'Large')
     ]
+    PIZZA_TOPPINGS = [
+        ('0', 'Cheese'),
+        ('1', '1 Topping'),
+        ('2', '2 Toppings'),
+        ('3', '3 Toppings'),
+        ('4', 'Special')
+    ]
 
-    type = models.CharField(max_length=1, choices=PIZZA_TYPES)
-    size = models.CharField(max_length=1, choices=PIZZA_SIZES)
-    toppings = models.ManyToManyField('PizzaTopping', related_name='pizzas', blank=True)
+    type = models.CharField(max_length=1, choices=PIZZA_TYPES, help_text="Regular or Sicilian Pizza?")
+    topping = models.IntegerField(choices=PIZZA_TOPPINGS, help_text="How many toppings?")
+    size = models.CharField(max_length=1, choices=PIZZA_SIZES, help_text="Choose your Pizza Size")
 
     def __str__(self):
-        return f"{self.get_type_display()} - Size: {self.size} - Toppings: {' - '.join([str(topping) for topping in self.toppings.all()])} : $ {self.price}"
+        return f"{self.get_type_display()} - Size: {self.size} : $ {self.price}"
 
 class PizzaTopping(models.Model):
-    name = models.CharField(max_length=70)
+    name = models.CharField(max_length=70, help_text="Choose your toppings")
 
     def __str__(self):
         return f"{self.name}"
@@ -75,14 +83,14 @@ class Sub(Product):
         ('L', 'Large')
     ]
 
-    size = models.CharField(max_length=1, choices=SUB_SIZES)
-    toppings = models.ManyToManyField('SubTopping', related_name='subs', blank=True)
+    size = models.CharField(max_length=1, choices=SUB_SIZES, help_text="Choose the size")
+
     def __str__(self):
-        return f"{self.name} - Size: {self.size} - Toppings: {' - '.join([str(topping) for topping in self.toppings.all()])} : $ {self.price}"
+        return f"{self.name} - Size: {self.size} : $ {self.price}"
 
 class SubTopping(models.Model):
-    name = models.CharField(max_length=70)
-    price = models.DecimalField(max_digits=5, decimal_places=2)
+    name = models.CharField(max_length=70, help_text="Choose your toppings")
+    price = models.DecimalField(max_digits=5, decimal_places=2, help_text="Topping price")
 
     def __str__(self):
         return f"{self.name} : $ {self.price}"

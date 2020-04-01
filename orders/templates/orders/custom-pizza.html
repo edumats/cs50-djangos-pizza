@@ -1,0 +1,29 @@
+{% extends "orders/layout.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    Django's Pizza
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 text-center mt-5">
+                <img src="https://via.placeholder.com/150" class="img-fluid"/>
+            </div>
+
+            <div class="col-md-9 mt-5">
+                <h1>Make your own Pizza</h1>
+
+                <form action="#" method="POST">
+
+                    {% csrf_token %}
+                    {{ PizzaForm|crispy }}
+                    {{ PizzaToppingForm|crispy }}
+                    <a href="#" class="btn btn-success">Add to Cart ${{ product.price }}</a>
+                </form>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

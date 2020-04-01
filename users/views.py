@@ -17,12 +17,6 @@ def register(request):
         form = UserRegisterForm()
     return render(request, 'users/register.html', {'form': form})
 
-def home(request):
-    return HttpResponse('<h1>Welcome Home</h1>')
-
-def about(request):
-    return HttpResponse('<h1>This is home/about</h1>')
-
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get["username"]

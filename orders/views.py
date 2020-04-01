@@ -4,6 +4,8 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
 
+from .forms import PizzaForm, PizzaToppingForm
+
 # For getting model names
 from django.apps import apps
 
@@ -24,7 +26,6 @@ def index(request):
             "Salads": Salad.objects.all(),
             "Dinner Platters": Dinner.objects.all()
         },
-        "Pizzas": Pizza._meta.get_field('type').choices
     }
     return render(request, "orders/index.html", dishes)
 
@@ -45,3 +46,23 @@ def products(request, slug):
         "type": product.__class__.__name__ # Gets class name
     }
     return render(request, "orders/product.html", context)
+
+def custom_pizza(request):
+    if request.method == 'POST':
+        pass
+    else:
+
+        context = {
+            "PizzaToppings": PizzaTopping.objects.all(),
+            "PizzaSizes": Pizza._meta.get_field('size').choices,
+            "PizzaTypes": Pizza._meta.get_field('type').choices,
+            "PizzaForm": PizzaForm(),
+            "PizzaToppingForm": PizzaToppingForm()
+        }
+        return render(request, "orders/custom-pizza.html", context)
+
+def add_to_cart(request, slug):
+    try:
+        product = Product.objects.get_subclass(slug=slug)
+    except Product.DoesNotExist:
+        raise Http404("No Product matches given that query")

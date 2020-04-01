@@ -8,7 +8,7 @@
     <main class="container mt-3">
 
         <h3 class="mb-3">Pizza</h3>
-        <!-- Regular Pizza option -->
+        <!-- Pizza builder -->
         <div class="row mb-3">
             <div class="col-sm-4">
                 <div class="card bg-light px-0 mb-3">
@@ -18,30 +18,13 @@
                         </div>
                         <div class="col-8">
                             <div class="card-body">
-                                <h5 class="card-title">Regular</h5>
+                                <h5 class="card-title">Build your Pizza</h5>
                             </div>
                         </div>
-                        <a href="{{ dish.get_absolute }}" class="stretched-link"></a>
+                        <a href="{% url 'custom-pizza' %}" class="stretched-link"></a>
                     </div>
                 </div>
             </div>
-            <!-- Sician Pizza option -->
-            <div class="col-sm-4">
-                <div class="card bg-light px-0 mb-3">
-                    <div class="row no-gutters">
-                        <div class="col-4">
-                            <img class="card-img" src="https://via.placeholder.com/150" />
-                        </div>
-                        <div class="col-8">
-                            <div class="card-body">
-                                <h5 class="card-title">Sicilian Pizza</h5>
-                            </div>
-                        </div>
-                        <a href="{{ dish.get_absolute }}" class="stretched-link"></a>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         {% for name, type in simple_dishes.items %}
             <h3 class="mb-3">{{ name }}</h3>
