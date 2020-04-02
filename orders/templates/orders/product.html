@@ -1,4 +1,5 @@
 {% extends "orders/layout.html" %}
+{% load crispy_forms_tags %}
 
 {% block title %}
     Django's Pizza
@@ -17,41 +18,8 @@
                 <form action="#" method="POST">
                     {% csrf_token %}
                     {% if type == 'Sub' %}
-                        <div class="form-group">
-                            <label for="subSize">Size of Sub</label>
-                            <select class="form-control" id="subSize">
-                                {% for size in SubSizes %}
-                                    <option value="">{{ size }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="subToppingSelect">Select a topping</label>
-                            <select class="form-control" id="subToppingSelect">
-                                {% for topping in SubToppings %}
-                                    <option value="">{{ topping }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    {% endif %}
-
-                    {% if type == 'Pizza' %}
-                        <div class="form-group">
-                            <label for="subSize">Size of Pizza</label>
-                            <select class="form-control" id="subSize">
-                                {% for size in PizzaSizes %}
-                                    <option value="">{{ size }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="toppingSelect">Select a topping</label>
-                            <select class="form-control" id="toppingSelect">
-                                {% for topping in PizzaToppings %}
-                                    <option value="">{{ topping }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                        {{ SubForm|crispy }}
+                        {{ SubToppingForm|crispy }}
                     {% endif %}
 
                     {% if type == 'Dinner' %}

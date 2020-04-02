@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.http import Http404
 
-from .forms import PizzaForm, PizzaToppingForm
+from .forms import PizzaForm, PizzaToppingForm, SubForm, SubToppingForm
 
 # For getting model names
 from django.apps import apps
@@ -16,21 +16,19 @@ def index(request):
     if not request.user.is_authenticated:
         return render(request, "users/login.html", {"message": None})
 
-    # To get list of model names
-    apps.all_models['orders']
-
     dishes = {
         "simple_dishes": {
-            "Subs": Sub.objects.all(),
+        # In some queries, there is a .filter(size='S') to remove duplicates from the menu
+            "Subs": Sub.objects.filter(size='S'),
             "Pasta": Pasta.objects.all(),
             "Salads": Salad.objects.all(),
-            "Dinner Platters": Dinner.objects.all()
+            "Dinner Platters": Dinner.objects.filter(size='S')
         },
     }
     return render(request, "orders/index.html", dishes)
 
 def products(request, slug):
-    # Try to get Product subclass by slug
+    # Try to get Product subclass name by slug
     try:
         product = Product.objects.get_subclass(slug=slug)
     except Product.DoesNotExist:
@@ -38,10 +36,8 @@ def products(request, slug):
 
     context = {
         "product": product,
-        "PizzaToppings": PizzaTopping.objects.all(),
-        "SubToppings": SubTopping.objects.all(),
-        "SubSizes": Sub._meta.get_field('size').choices,
-        "PizzaSizes": Pizza._meta.get_field('size').choices,
+        "SubForm": SubForm(),
+        "SubToppingForm": SubToppingForm(),
         "DinnerSizes": Dinner._meta.get_field('size').choices,
         "type": product.__class__.__name__ # Gets class name
     }
@@ -49,9 +45,10 @@ def products(request, slug):
 
 def custom_pizza(request):
     if request.method == 'POST':
-        pass
+        form = PizzaForm(request.POST)
+        if form.is_valid():
+            pass
     else:
-
         context = {
             "PizzaToppings": PizzaTopping.objects.all(),
             "PizzaSizes": Pizza._meta.get_field('size').choices,

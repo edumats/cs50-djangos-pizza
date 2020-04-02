@@ -4,7 +4,7 @@ from model_utils.managers import InheritanceManager
 class Product(models.Model):
     name = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    slug = models.SlugField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=120)
     image = models.URLField(default='https://via.placeholder.com/150')
     description = models.CharField(max_length=500, blank=True)
     created = models.DateTimeField(auto_now_add=True)
