@@ -2,7 +2,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.http import Http404
+from django.http import Http404, JsonResponse
+import json
 
 from .forms import PizzaForm, PizzaToppingForm, SubForm, SubToppingForm
 
@@ -43,23 +44,30 @@ def products(request, slug):
     }
     return render(request, "orders/product.html", context)
 
+# Displays page of customizing pizzas
 def custom_pizza(request):
-    if request.method == 'POST':
-        form = PizzaForm(request.POST)
-        if form.is_valid():
-            pass
-    else:
-        context = {
-            "PizzaToppings": PizzaTopping.objects.all(),
-            "PizzaSizes": Pizza._meta.get_field('size').choices,
-            "PizzaTypes": Pizza._meta.get_field('type').choices,
-            "PizzaForm": PizzaForm(),
-            "PizzaToppingForm": PizzaToppingForm()
-        }
-        return render(request, "orders/custom-pizza.html", context)
+    context = {
+        "PizzaForm": PizzaForm(),
+        "PizzaToppingForm": PizzaToppingForm()
+    }
+    return render(request, "orders/custom-pizza.html", context)
 
-def add_to_cart(request, slug):
-    try:
-        product = Product.objects.get_subclass(slug=slug)
-    except Product.DoesNotExist:
-        raise Http404("No Product matches given that query")
+# Returns price when customizing a product
+def check_price(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print(data)
+
+        # type = request.POST.get("type")
+        # size = request.POST.get("size")
+        # topping = request.POST.get("topping")
+        # print(f"{type} {size} {topping}")
+        try:
+            pizza = Pizza.objects.get(type=data.get('type'), size=data.get('size'), topping=data.get('topping'))
+            print(pizza)
+        except Pizza.DoesNotExist:
+            return JsonResponse({'price': 'Not found'})
+    return JsonResponse({'price': pizza.price, 'success':True})
+
+def hello(request):
+    return HttpResponse('Hello')

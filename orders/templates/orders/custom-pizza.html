@@ -1,4 +1,5 @@
 {% extends "orders/layout.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
 
 {% block title %}
@@ -15,15 +16,18 @@
             <div class="col-md-9 mt-5">
                 <h1>Make your own Pizza</h1>
 
-                <form action="#" method="POST">
+                <form action="{% url 'add' %}" method="post" novalidate>
 
                     {% csrf_token %}
                     {{ PizzaForm|crispy }}
                     {{ PizzaToppingForm|crispy }}
-                    <a href="#" class="btn btn-success">Add to Cart ${{ product.price }}</a>
+                    <button type="submit" id="order-button" class="btn btn-success">Add to Cart{{ product.price }}</button>
                 </form>
             </div>
         </div>
 
     </div>
+
+    <!-- JS File -->
+    <script type="text/javascript" src="{% static 'orders/scripts.js' %}"></script>
 {% endblock %}

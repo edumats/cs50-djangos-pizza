@@ -57,16 +57,16 @@ class Pizza(Product):
         ('L', 'Large')
     ]
     PIZZA_TOPPINGS = [
-        ('0', 'Cheese'),
-        ('1', '1 Topping'),
-        ('2', '2 Toppings'),
-        ('3', '3 Toppings'),
-        ('4', 'Special')
+        ('CH', 'Cheese'),
+        ('1T', '1 Topping'),
+        ('2T', '2 Toppings'),
+        ('3T', '3 Toppings'),
+        ('SP', 'Special')
     ]
 
-    type = models.CharField(max_length=1, choices=PIZZA_TYPES, help_text="Regular or Sicilian Pizza?")
-    topping = models.IntegerField(choices=PIZZA_TOPPINGS, help_text="How many toppings?")
-    size = models.CharField(max_length=1, choices=PIZZA_SIZES, help_text="Choose your Pizza Size")
+    type = models.CharField(max_length=1, choices=PIZZA_TYPES, help_text="Regular or Sicilian Pizza?", default='R')
+    topping = models.CharField(max_length=2, choices=PIZZA_TOPPINGS, help_text="How many toppings?", default='S')
+    size = models.CharField(max_length=1, choices=PIZZA_SIZES, help_text="Choose your Pizza Size", default='CH')
 
     def __str__(self):
         return f"{self.get_type_display()} - Size: {self.size} : $ {self.price}"
