@@ -6,7 +6,6 @@
 
 {% block body %}
     <main class="container mt-3">
-
         <h3 class="mb-3">Pizza</h3>
         <!-- Pizza builder -->
         <div class="row mb-3">
@@ -25,7 +24,7 @@
                     </div>
                 </div>
             </div>
-        </div>    
+        </div>
         {% for name, type in simple_dishes.items %}
             <h3 class="mb-3">{{ name }}</h3>
             <div class="row mb-3">
@@ -39,9 +38,6 @@
                                 <div class="col-8">
                                     <div class="card-body">
                                         <h5 class="card-title">{{ dish.name }}</h5>
-                                        {% if dish.type %}
-                                        <h6>{{ dish.get_type_display }} Pizza</h6>
-                                        {% endif %}
                                     </div>
                                 </div>
                                 <a href="{{ dish.get_absolute }}" class="stretched-link"></a>

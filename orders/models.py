@@ -4,7 +4,7 @@ from model_utils.managers import InheritanceManager
 class Product(models.Model):
     name = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    slug = models.SlugField(max_length=120)
+    slug = models.SlugField(max_length=120, unique=True)
     image = models.URLField(default='https://via.placeholder.com/150')
     description = models.CharField(max_length=500, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -18,8 +18,8 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name}"
 
-    def get_absolute(self):
-        return f"/products/{self.slug}" # Remember to add a category before the slug for easier queries
+    # def get_absolute(self):
+    #     return f"/products/{self.slug}" # Remember to add a category before the slug for easier queries
 
     # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
     def downcast(self):
@@ -35,9 +35,16 @@ class Dinner(Product):
         ('L', 'Large')
     ]
     size = models.CharField(max_length=1, choices=DINNER_SIZES, help_text="Choose the size")
+    type = models.ForeignKey('DinnerType', on_delete=models.CASCADE, related_name='dinnertype')
 
     def __str__(self):
         return f"{self.name} - Size: {self.size} - $ {self.price}"
+
+class DinnerType(models.Model):
+    name = models.CharField(max_length=70)
+
+    def __str__(self):
+        return self.name
 
 class Salad(Product):
     def __str__(self):
@@ -82,11 +89,20 @@ class Sub(Product):
         ('S', 'Small'),
         ('L', 'Large')
     ]
-
-    size = models.CharField(max_length=1, choices=SUB_SIZES, help_text="Choose the size")
+    type = models.ForeignKey('SubType', on_delete=models.CASCADE, related_name='subtype')
+    size = models.CharField(max_length=1, choices=SUB_SIZES, help_text="Choose the Sub size")
 
     def __str__(self):
         return f"{self.name} - Size: {self.size} : $ {self.price}"
+
+class SubType(models.Model):
+    name = models.CharField(max_length=70)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute(self):
+        return f"/products/sub/{self.name}/customize"
 
 class SubTopping(models.Model):
     name = models.CharField(max_length=70, help_text="Choose your toppings")

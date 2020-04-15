@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
 
 {% block title %}
-    Django's Pizza - Customize your Pizza
+    Django's Pizza - Customize your {{ category }}
 {% endblock %}
 
 {% block body %}
@@ -14,13 +14,18 @@
             </div>
 
             <div class="col-md-9 mt-5">
-                <h1>Make your own Pizza</h1>
+                <h1>{{ product }} {{ category }}</h1>
 
                 <form action="#" id="order-form" method="post" novalidate>
 
                     {% csrf_token %}
-                    {{ PizzaForm|crispy }}
-                    {{ PizzaToppingForm|crispy }}
+                    {% if category == 'Pizza' %}
+                        {{ PizzaForm|crispy }}
+                        {{ PizzaToppingForm|crispy }}
+                    {% elif category == 'Sub' %}
+                        {{ SubSizeForm|crispy }}
+                        {{ SubToppingForm|crispy }}
+                    {% endif %}
                     <button type="submit" id="order-button" class="btn btn-success">Add to Cart</button>
                 </form>
             </div>
@@ -29,5 +34,7 @@
     </div>
 
     <!-- JS File -->
+    <!--
     <script type="text/javascript" src="{% static 'orders/pizza-price.js' %}"></script>
+-->
 {% endblock %}

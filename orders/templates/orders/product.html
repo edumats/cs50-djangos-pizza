@@ -19,6 +19,7 @@
                     {% csrf_token %}
                     {% if type == 'Sub' %}
                         {{ SubForm|crispy }}
+                        {{ SubSizeForm|crispy }}
                         {{ SubToppingForm|crispy }}
                     {% endif %}
 

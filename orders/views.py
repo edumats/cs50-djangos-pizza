@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.http import Http404, JsonResponse
 import json
 
-from .forms import PizzaForm, PizzaToppingForm, SubForm, SubToppingForm
+from .forms import PizzaForm, PizzaToppingForm, SubForm, SubToppingForm, SubSizeForm
 
 # For getting model names
 from django.apps import apps
@@ -20,10 +20,10 @@ def index(request):
     dishes = {
         "simple_dishes": {
         # In some queries, there is a .filter(size='S') to remove duplicates from the menu
-            "Subs": Sub.objects.filter(size='S'),
+            "Subs": SubType.objects.all(),
             "Pasta": Pasta.objects.all(),
             "Salads": Salad.objects.all(),
-            "Dinner Platters": Dinner.objects.filter(size='S')
+            "Dinner Platters": DinnerType.objects.all()
         },
     }
     return render(request, "orders/index.html", dishes)
@@ -39,6 +39,7 @@ def products(request, slug):
         "product": product,
         "SubForm": SubForm(),
         "SubToppingForm": SubToppingForm(),
+        "SubSizeForm": SubSizeForm(),
         "DinnerSizes": Dinner._meta.get_field('size').choices,
         "type": product.__class__.__name__ # Gets class name
     }
@@ -58,16 +59,29 @@ def check_price(request):
         data = json.loads(request.body)
         print(data)
 
-        # type = request.POST.get("type")
-        # size = request.POST.get("size")
-        # topping = request.POST.get("topping")
-        # print(f"{type} {size} {topping}")
         try:
             pizza = Pizza.objects.get(type=data.get('type'), size=data.get('size'), topping=data.get('topping'))
             print(pizza)
         except Pizza.DoesNotExist:
             return JsonResponse({'price': 'Not found'})
-    return JsonResponse({'price': pizza.price, 'success':True})
+    return JsonResponse({
+        'price': pizza.price,
+        'slug': pizza.slug ,
+        'success':True
+    })
 
 def hello(request):
     return HttpResponse('Hello')
+
+def custom(request, category, product):
+
+    context = {
+        "category": category.capitalize(),
+        "product": product,
+        "PizzaForm": PizzaForm(),
+        "PizzaToppingForm": PizzaToppingForm(),
+        "SubForm": SubForm(),
+        "SubToppingForm": SubToppingForm(),
+        "SubSizeForm": SubSizeForm()
+    }
+    return render(request, "orders/custom.html", context)

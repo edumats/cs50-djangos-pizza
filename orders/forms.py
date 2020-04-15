@@ -1,16 +1,13 @@
-from django.forms import Form, ModelForm, ModelMultipleChoiceField, ModelChoiceField, CheckboxSelectMultiple, BooleanField
+from django.forms import Form, ModelForm, ModelMultipleChoiceField, ModelChoiceField, ChoiceField, CheckboxSelectMultiple, BooleanField
 from orders.models import Pizza, PizzaTopping, Sub, SubTopping
 
 class PizzaForm(ModelForm):
     class Meta:
         model = Pizza
         fields = ['type', 'size', 'topping']
-        widget = {
-            'type': BooleanField()
-        }
 
 class PizzaToppingForm(Form):
-    name = ModelMultipleChoiceField(
+    toppings = ModelMultipleChoiceField(
         queryset=PizzaTopping.objects.all(),
         widget=CheckboxSelectMultiple(),
         help_text="Choose your toppings",
@@ -18,7 +15,17 @@ class PizzaToppingForm(Form):
         to_field_name="name"
         )
 
-class SubForm(ModelForm):
+
+class SubForm(Form):
+    type = ModelChoiceField(
+        queryset=Sub.objects.order_by().values('name').distinct(),
+        empty_label=None,
+        help_text="Choose your Sub",
+        required=False,
+        to_field_name="name"
+    )
+
+class SubSizeForm(ModelForm):
     class Meta:
         model = Sub
         fields = ['size']

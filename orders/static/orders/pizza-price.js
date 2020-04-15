@@ -4,21 +4,25 @@
 // Requote for price
 
 document.addEventListener('DOMContentLoaded', () => {
+
+
+    // Data object to be sent to server
     const data = {};
-    // Sets default values into object and query initial price
+    // Sets default select values into object and query initial price
     document.querySelectorAll('select').forEach(item => {
         data[item.name] = item.value;
     });
     requestAjax()
 
     // If select box changes, update object and query again for price
+    // Could be included on function above
     document.querySelectorAll('select').forEach((item) => {
         item.onchange = () => {
             data[item.name] = item.value;
-            console.log(data);
+            requestAjax();
         };
     });
-
+    // Retrieves CSRF data from cookie
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -36,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function requestAjax() {
+        // Gets token from cookie to pass CSRF check for POST requests
         var csrftoken = getCookie('csrftoken');
-        console.log(`token: ${csrftoken}`)
 
         // Initiate new request
         const request = new XMLHttpRequest();
@@ -51,12 +55,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const serverResponse = JSON.parse(request.responseText);
 
             if (serverResponse.success) {
-                console.log(serverResponse.price);
-                content = `Add $${serverResponse.price}`;
+                console.log(`Server returned: ${serverResponse.price}`);
+                // Adds price to submit button
+                content = `Add to cart $${serverResponse.price}`;
                 document.querySelector('#order-button').innerHTML = content;
+
+                //Adds action url to form
+                document.querySelector('#order-form').action = `../../cart/add/${serverResponse.slug}`;
+
+                // Enables form to send data again, if blocked before
+                document.querySelector('#order-form').onsubmit = e => {
+                    e.returnValue = true;
+                }
             }
             else {
                 document.querySelector('#order-button').innerHTML = 'Error retrieving price';
+
+                //Removes form action url
+                document.querySelector('#order-form').action = '#';
+
+                // Prevents form from reloading the page if server does not return valid product
+                document.querySelector('#order-form').onsubmit = e => {
+                    e.preventDefault();
+                }
             }
         }
 

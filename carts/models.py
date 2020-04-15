@@ -35,7 +35,7 @@ class CartItem(models.Model):
         elif self.pizza_toppings.exists():
             return f"{self.item.name} - Pizza Toppings: {' - '.join([str(topping) for topping in self.pizza_toppings.all()])} - Quantity: {self.quantity}"
         else:
-            return f"{self.item.name} - Quantity: {self.quantity}"
+            return f"{self.item.name} - No toppings - Quantity: {self.quantity}"
 
     def get_total_price(self):
         return self.quantity * self.item.price

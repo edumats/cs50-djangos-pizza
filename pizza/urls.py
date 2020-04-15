@@ -18,12 +18,17 @@ from django.urls import include, path
 from django.contrib.auth import views as auth_views
 # Imports from users module
 from users import views as user_views
+from orders import views as product_views
+from carts import views as cart_views
+
 
 urlpatterns = [
-    path("", include("orders.urls")),
+    path("", product_views.index, name="index"),
+    path("products/", include("orders.urls")),
     path("login/", auth_views.LoginView.as_view(template_name='users/login.html'), name="login"),
     path("logout/", auth_views.LogoutView.as_view(template_name='users/logout.html'), name="logout"),
     path("admin/", admin.site.urls),
     path("register/", user_views.register, name="register"),
+    path("cart/add/<slug:slug>", cart_views.add, name="add"),
     path("cart/", include("carts.urls"))
 ]
