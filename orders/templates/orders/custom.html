@@ -25,16 +25,17 @@
                     {% elif category == 'Sub' %}
                         {{ SubSizeForm|crispy }}
                         {{ SubToppingForm|crispy }}
+                    {% elif category == 'Dinner' %}
+                        {{ SubSizeForm|crispy }}
                     {% endif %}
-                    <button type="submit" id="order-button" class="btn btn-success">Add to Cart</button>
+                    <button type="submit" id="order-button" class="btn btn-success">Add to Cart <span id="price"></span></button>
                 </form>
             </div>
         </div>
 
     </div>
-
-    <!-- JS File -->
-    <!--
-    <script type="text/javascript" src="{% static 'orders/pizza-price.js' %}"></script>
--->
+    {{ category|json_script:"category" }}
+    {{ product|json_script:"product" }}
+    <!--JS File -->
+    <script type="text/javascript" src="{% static 'orders/query-price.js' %}"></script>
 {% endblock %}

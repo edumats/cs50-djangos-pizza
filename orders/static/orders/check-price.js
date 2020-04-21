@@ -5,12 +5,14 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-
     // Data object to be sent to server
     const data = {};
     // Sets default select values into object and query initial price
     document.querySelectorAll('select').forEach(item => {
         data[item.name] = item.value;
+        console.log(`Whats is item: ${item}`);
+        console.log(`Whats is item.name: ${item.name}`);
+        console.log(`Whats is item.value: ${item.value}`);
     });
     requestAjax()
 
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const request = new XMLHttpRequest();
         request.open('POST', '../check-price/', true);
 
+        // Set request header with CSRF token code
         request.setRequestHeader('X-CSRFToken', csrftoken);
         request.setRequestHeader('contentType', 'application/json; charset=utf-8');
 
@@ -81,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        console.log(`We are sending: ${data.type},  ${data.size} and ${data.topping}`)
+        console.log(`Sending to server: ${data.type},  ${data.size} and ${data.topping}`)
         // Sends data to server
         request.send(JSON.stringify(data));
 

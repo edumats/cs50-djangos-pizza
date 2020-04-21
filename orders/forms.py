@@ -4,7 +4,7 @@ from orders.models import Pizza, PizzaTopping, Sub, SubTopping
 class PizzaForm(ModelForm):
     class Meta:
         model = Pizza
-        fields = ['type', 'size', 'topping']
+        fields = ['size', 'topping']
 
 class PizzaToppingForm(Form):
     toppings = ModelMultipleChoiceField(
@@ -15,26 +15,17 @@ class PizzaToppingForm(Form):
         to_field_name="name"
         )
 
-
-class SubForm(Form):
-    type = ModelChoiceField(
-        queryset=Sub.objects.order_by().values('name').distinct(),
-        empty_label=None,
-        help_text="Choose your Sub",
-        required=False,
-        to_field_name="name"
-    )
-
 class SubSizeForm(ModelForm):
     class Meta:
         model = Sub
         fields = ['size']
 
 class SubToppingForm(Form):
-    toppings = ModelMultipleChoiceField(
+    sub_toppings = ModelMultipleChoiceField(
         queryset=SubTopping.objects.all(),
-        widget=CheckboxSelectMultiple(),
-        help_text="Choose your toppings",
+        # sets price of toppings to 0.50 and prevents checkbox from being checked at reload
+        widget=CheckboxSelectMultiple(attrs={'data-price':'0.50', 'autocomplete': 'off'}),
+        help_text='Choose your toppings',
         required=False,
         to_field_name="name"
     )

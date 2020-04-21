@@ -18,8 +18,8 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name}"
 
-    # def get_absolute(self):
-    #     return f"/products/{self.slug}" # Remember to add a category before the slug for easier queries
+    def get_absolute(self):
+        return f"/products/{self.slug}" # Remember to add a category before the slug for easier queries
 
     # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
     def downcast(self):
@@ -28,6 +28,7 @@ class Product(models.Model):
                 self._downcast = self.sub
 
         return self._downcast
+
 
 class Dinner(Product):
     DINNER_SIZES = [
@@ -40,11 +41,16 @@ class Dinner(Product):
     def __str__(self):
         return f"{self.name} - Size: {self.size} - $ {self.price}"
 
+
 class DinnerType(models.Model):
     name = models.CharField(max_length=70)
 
     def __str__(self):
         return self.name
+
+    def get_absolute(self):
+        return f"/products/dinner/{self.name}/customize"
+
 
 class Salad(Product):
     def __str__(self):
@@ -54,11 +60,8 @@ class Pasta(Product):
     def __str__(self):
         return f"{self.name} - $ {self.price}"
 
+
 class Pizza(Product):
-    PIZZA_TYPES = [
-        ('R', 'Regular'),
-        ('S', 'Sicilian')
-    ]
     PIZZA_SIZES = [
         ('S', 'Small'),
         ('L', 'Large')
@@ -71,12 +74,22 @@ class Pizza(Product):
         ('SP', 'Special')
     ]
 
-    type = models.CharField(max_length=1, choices=PIZZA_TYPES, help_text="Regular or Sicilian Pizza?", default='R')
+    type =  models.ForeignKey('PizzaType', on_delete=models.CASCADE, related_name='pizzatype')
     topping = models.CharField(max_length=2, choices=PIZZA_TOPPINGS, help_text="How many toppings?", default='S')
     size = models.CharField(max_length=1, choices=PIZZA_SIZES, help_text="Choose your Pizza Size", default='CH')
 
     def __str__(self):
-        return f"{self.get_type_display()} - Size: {self.size} : $ {self.price}"
+        return f"{self.name} - Size: {self.size} : $ {self.price}"
+
+class PizzaType(models.Model):
+    name = models.CharField(max_length=70)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute(self):
+        return f"/products/pizza/{self.name}/customize"
+
 
 class PizzaTopping(models.Model):
     name = models.CharField(max_length=70, help_text="Choose your toppings")
@@ -84,16 +97,18 @@ class PizzaTopping(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+
 class Sub(Product):
     SUB_SIZES = [
         ('S', 'Small'),
         ('L', 'Large')
     ]
     type = models.ForeignKey('SubType', on_delete=models.CASCADE, related_name='subtype')
-    size = models.CharField(max_length=1, choices=SUB_SIZES, help_text="Choose the Sub size")
+    size = models.CharField(max_length=1, choices=SUB_SIZES, help_text="Choose the Sub size", default='S')
 
     def __str__(self):
         return f"{self.name} - Size: {self.size} : $ {self.price}"
+
 
 class SubType(models.Model):
     name = models.CharField(max_length=70)
@@ -103,6 +118,7 @@ class SubType(models.Model):
 
     def get_absolute(self):
         return f"/products/sub/{self.name}/customize"
+
 
 class SubTopping(models.Model):
     name = models.CharField(max_length=70, help_text="Choose your toppings")
