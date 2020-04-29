@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block body %}
+    
     <div class="container">
         <div class="row">
             <div class="col-md-3 text-center mt-5">
@@ -22,11 +23,14 @@
                     {% if category == 'Pizza' %}
                         {{ PizzaForm|crispy }}
                         {{ PizzaToppingForm|crispy }}
+                        {{ CartQuantity|crispy }}
                     {% elif category == 'Sub' %}
                         {{ SubSizeForm|crispy }}
                         {{ SubToppingForm|crispy }}
+                        {{ CartQuantity|crispy }}
                     {% elif category == 'Dinner' %}
                         {{ SubSizeForm|crispy }}
+                        {{ CartQuantity|crispy }}
                     {% endif %}
                     <button type="submit" id="order-button" class="btn btn-success">Add to Cart <span id="price"></span></button>
                 </form>

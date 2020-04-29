@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from orders.models import Product, SubTopping, PizzaTopping
 
 class Cart(models.Model):
@@ -27,7 +27,7 @@ class CartItem(models.Model):
     sub_toppings = models.ManyToManyField('orders.SubTopping', related_name='subs', blank=True)
     pizza_toppings = models.ManyToManyField('orders.PizzaTopping', related_name='pizzas', blank=True)
     created = models.DateTimeField(auto_now_add=True)
-    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(200)])
 
     def __str__(self):
         if self.sub_toppings.exists():

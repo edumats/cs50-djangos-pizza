@@ -6,7 +6,7 @@ from django.http import Http404, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import json
 
-from .forms import PizzaForm, PizzaToppingForm, SubToppingForm, SubSizeForm
+from .forms import PizzaForm, PizzaToppingForm, SubToppingForm, SubSizeForm, CartQuantity
 
 # For getting model names
 from django.apps import apps
@@ -42,17 +42,11 @@ def products(request, slug):
         "SubToppingForm": SubToppingForm(),
         "SubSizeForm": SubSizeForm(),
         "DinnerSizes": Dinner._meta.get_field('size').choices,
-        "type": product.__class__.__name__ # Gets class name
+        "type": product.__class__.__name__, # Gets class name
+        "CartQuantity": CartQuantity()
     }
     return render(request, "orders/product.html", context)
 
-# Displays page of customizing pizzas
-def custom_pizza(request):
-    context = {
-        "PizzaForm": PizzaForm(),
-        "PizzaToppingForm": PizzaToppingForm()
-    }
-    return render(request, "orders/custom-pizza.html", context)
 
 # Returns price when customizing a product
 def check_price(request):
@@ -62,27 +56,28 @@ def check_price(request):
         if data.get('category') == 'Sub':
             try:
                 type = SubType.objects.get(name=data.get('product'))
-                pizza = Sub.objects.get(type=type, size=data.get('size'))
-                print(pizza)
+                product = Sub.objects.get(type=type, size=data.get('size'))
+                print(product)
             except ObjectDoesNotExist:
                 return JsonResponse({'price': 'Not found'})
         elif data.get('category') == 'Pizza':
             try:
                 type = PizzaType.objects.get(name=data.get('product'))
-                pizza = Pizza.objects.get(type=type, size=data.get('size'), topping=data.get('topping'))
-                print(pizza)
+                product = Pizza.objects.get(type=type, size=data.get('size'), topping=data.get('topping'))
+                print(product)
             except ObjectDoesNotExist:
                 return JsonResponse({'price': 'Not found'})
         elif data.get('category') == 'Dinner':
             try:
                 type = DinnerType.objects.get(name=data.get('product'))
-                pizza = Dinner.objects.get(type=type, size=data.get('size'))
-                print(pizza)
+                product = Dinner.objects.get(type=type, size=data.get('size'))
+                print(product)
             except ObjectDoesNotExist:
                 return JsonResponse({'price': 'Not found'})
     return JsonResponse({
-        'price': pizza.price,
-        'slug': pizza.slug ,
+        'price': product.price,
+        'slug': product.slug ,
+        'name': product.name,
         'success':True
     })
 
@@ -97,6 +92,7 @@ def custom(request, category, product):
         "PizzaForm": PizzaForm(),
         "PizzaToppingForm": PizzaToppingForm(),
         "SubToppingForm": SubToppingForm(),
-        "SubSizeForm": SubSizeForm()
+        "SubSizeForm": SubSizeForm(),
+        "CartQuantity": CartQuantity()
     }
     return render(request, "orders/custom.html", context)

@@ -17,22 +17,7 @@
 
                 <form action="#" method="POST">
                     {% csrf_token %}
-                    {% if type == 'Sub' %}
-                        {{ SubForm|crispy }}
-                        {{ SubSizeForm|crispy }}
-                        {{ SubToppingForm|crispy }}
-                    {% endif %}
-
-                    {% if type == 'Dinner' %}
-                        <div class="form-group">
-                            <label for="subSize">Size of Dinner</label>
-                            <select class="form-control" id="subSize">
-                                {% for size in DinnerSizes %}
-                                    <option value="">{{ size }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    {% endif %}
+                    {{ CartQuantity|crispy }}
                     <a href="#" class="btn btn-success">Add to Cart ${{ product.price }}</a>
                 </form>
             </div>

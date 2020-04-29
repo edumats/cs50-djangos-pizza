@@ -1,0 +1,36 @@
+{% extends "orders/layout.html" %}
+{% load static %}
+
+{% block title %}
+    Django's Pizza
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <h3 class="my-4">Items</h3>
+                <table class="table">
+                    <thead>
+                        <th scope="col">Product</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Remove</th>
+                    </thead>
+                    <tbody id="order-details">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <ul id="order-summary">
+                    <h3 class="my-4">Your cart</h3>
+                    <li class="list-group-item">Total (USD): $<span id="order-total"></span></li>
+                </ul>
+                <button class="btn btn-primary" type="button" name="confirm-order">Confirm Order</button>
+            </div>
+        </div>
+    </div>
+    <!--JS File -->
+    <script type="text/javascript" src="{% static 'carts/cart-manager.js' %}"></script>
+{% endblock %}

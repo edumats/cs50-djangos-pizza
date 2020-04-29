@@ -33,9 +33,10 @@
                 <div class="navbar-nav ml-auto">
                     {% if user.is_authenticated %}
                         <p class="nav-item nav-link">Welcome {{ user.username }}</p>
-                        <a class="nav-item nav-link" href="#">Cart</a>
+                        <a class="nav-item nav-link" href="{% url 'cart' %}">Cart</a>
                         <a class="nav-item nav-link" href="{% url 'logout' %}">Logout</a>
                     {% else %}
+                        <a class="nav-item nav-link" href="{% url 'cart' %}">Cart</a>
                         <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
                         <a class="nav-item nav-link" href="{% url 'register' %}">Register</a>
                     {% endif %}

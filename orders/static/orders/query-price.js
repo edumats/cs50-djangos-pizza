@@ -19,31 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
         data[item.name] = item.value;
     });
 
-
+    // Send and receive data using AJAX
     requestAjax()
 
     // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
-    const subToppings = document.getElementsByName('sub_toppings');
-    if (subToppings.length > 0) {
-        subToppings.forEach(topping => {
-            topping.addEventListener('change', () => {
-                if (topping.checked) {
-                    let attribute = topping.getAttribute('data-price');
-                    let toppingName = topping.getAttribute('value');
-                    let oldPrice = document.getElementById('price').innerHTML;
-                    let result = parseFloat(oldPrice) + parseFloat(attribute);
-                    // Gets float result and convert to string with 2 decimal places
-                    document.getElementById('price').innerHTML = result.toFixed(2);
-                } else {
-                    let attribute = topping.getAttribute('data-price');
-                    let oldPrice = document.getElementById('price').innerHTML;
-                    let result = parseFloat(oldPrice) - parseFloat(attribute);
-                    // Gets float result and convert to string with 2 decimal places
-                    document.getElementById('price').innerHTML = result.toFixed(2);
-                }
-            })
-        })
-    }
+    checkSubToppings();
 
     // If select box changes, update object and query again for price
     // Could be included on function above
@@ -92,13 +72,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 content = `${serverResponse.price}`;
                 document.querySelector('#price').innerHTML = content;
 
-                //Adds action url to form
-                document.querySelector('#order-form').action = `../../cart/add/${serverResponse.slug}`;
+                // Add action url to form
+                // document.querySelector('#order-form').action = `../../cart/add/${serverResponse.slug}`;
+                document.querySelector('#order-form').action = '#';
+
+                let submitButton = document.querySelector('#order-button');
+
+                // Add slug and quantity to localStorage when submit button is clicked
+                submitButton.addEventListener('click', event => {
+                    event.preventDefault();
+                    setStorage(serverResponse.slug, serverResponse.price, serverResponse.name);
+                });
 
                 // Enables form to send data again, if blocked before
                 document.querySelector('#order-form').onsubmit = e => {
                     e.returnValue = true;
-                }
+                };
             }
             else {
                 // Insert error message in button
@@ -123,3 +112,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
 });
+
+
+function setStorage(slug, price, name) {
+    // Stores order data into localStorage
+    console.log('Adding to localStorage');
+    let quantity = document.querySelector('#id_quantity').value;
+    let order = {
+        'slug':slug,
+        'quantity': quantity,
+        'price': price,
+        'name': name
+    }
+    if (localStorage.getItem('orders')) {
+        let retrievedOrderArray = JSON.parse(localStorage.getItem('orders'));
+        retrievedOrderArray.push(order);
+        localStorage.setItem('orders', JSON.stringify(retrievedOrderArray));
+    } else {
+        let newOrderArray = [];
+        newOrderArray.push(order);
+        localStorage.setItem('orders', JSON.stringify(newOrderArray));
+    }
+}
+
+
+function checkSubToppings() {
+    // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
+    const subToppings = document.getElementsByName('sub_toppings');
+    if (subToppings.length > 0) {
+        subToppings.forEach(topping => {
+            topping.addEventListener('change', () => {
+                if (topping.checked) {
+                    let attribute = topping.getAttribute('data-price');
+                    let toppingName = topping.getAttribute('value');
+                    let oldPrice = document.getElementById('price').innerHTML;
+                    let result = parseFloat(oldPrice) + parseFloat(attribute);
+                    // Gets float result and convert to string with 2 decimal places
+                    document.getElementById('price').innerHTML = result.toFixed(2);
+                } else {
+                    let attribute = topping.getAttribute('data-price');
+                    let oldPrice = document.getElementById('price').innerHTML;
+                    let result = parseFloat(oldPrice) - parseFloat(attribute);
+                    // Gets float result and convert to string with 2 decimal places
+                    document.getElementById('price').innerHTML = result.toFixed(2);
+                }
+            })
+        })
+    }
+}
+
+function checkIfOrderExists(arr, slug) {
+    arr.forEach(order => {
+        if (order.slug === slug) {
+            return true;
+        } else {
+            return false;
+        }
+    })
+}

@@ -12,6 +12,7 @@ from carts.models import CartItem
 # Adds a product to cart
 def add(request, slug):
     if request.method == 'POST':
+        print(f'{request.POST}')
         form_pizza = PizzaForm(request.POST)
         form_topping = PizzaToppingForm(request.POST)
 
@@ -59,3 +60,12 @@ def remove(request):
 
 def hello(request):
     return HttpResponse('HI')
+
+def cart(request):
+    if request.method == 'POST':
+        pass
+    else:
+        # context = {
+        #     "Cart"
+        # }
+        return render(request, 'carts/cart.html')
