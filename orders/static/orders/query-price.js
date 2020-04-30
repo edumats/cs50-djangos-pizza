@@ -119,10 +119,10 @@ function setStorage(slug, price, name) {
     console.log('Adding to localStorage');
     let quantity = document.querySelector('#id_quantity').value;
     let order = {
-        'slug':slug,
-        'quantity': quantity,
+        'name': name,
         'price': price,
-        'name': name
+        'quantity': quantity,
+        'slug':slug
     }
     if (localStorage.getItem('orders')) {
         let retrievedOrderArray = JSON.parse(localStorage.getItem('orders'));
