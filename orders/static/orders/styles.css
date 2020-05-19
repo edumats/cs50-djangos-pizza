@@ -1,3 +1,11 @@
 .card {
     margin: 0;
 }
+
+form select {
+    max-width: 25%;
+}
+
+form input {
+    max-width: 20%;
+}

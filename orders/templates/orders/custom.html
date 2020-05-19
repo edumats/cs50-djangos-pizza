@@ -7,7 +7,11 @@
 {% endblock %}
 
 {% block body %}
-    
+    <!-- Client side alerts -->
+    <div class="alert alert-primary fade show" id="alertSystem" role="alert">
+        <p id="alertMessage"></p>
+    </div>
+
     <div class="container">
         <div class="row">
             <div class="col-md-3 text-center mt-5">
@@ -15,7 +19,11 @@
             </div>
 
             <div class="col-md-9 mt-5">
-                <h1>{{ product }} {{ category }}</h1>
+                {% if category == 'Pizza' or category == 'Sub' or category == 'Dinner' %}
+                    <h1>{{ product }} {{ category }}</h1>
+                {% elif category == 'Pasta' or category == 'Salad' %}
+                    <h1>{{ product }}</h1>
+                {% endif %}
 
                 <form action="#" id="order-form" method="post" novalidate>
 
@@ -30,6 +38,8 @@
                         {{ CartQuantity|crispy }}
                     {% elif category == 'Dinner' %}
                         {{ SubSizeForm|crispy }}
+                        {{ CartQuantity|crispy }}
+                    {% else %}
                         {{ CartQuantity|crispy }}
                     {% endif %}
                     <button type="submit" id="order-button" class="btn btn-success">Add to Cart <span id="price"></span></button>

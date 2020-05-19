@@ -3,60 +3,31 @@
 // If select box changes, update object
 // Requote for price
 
-document.addEventListener('DOMContentLoaded', () => {
 
-    // Data object to be sent to server
-    const data = {};
-    const category = document.getElementById('category').textContent;
-    const product = document.getElementById('product').textContent;
-
-    // Remove ' or " from product and category
-    data['category'] = category.replace(/['"]+/g, '');
-    data['product'] = product.replace(/['"]+/g, '');
-
-    // Sets default select values into object and query initial price
-    document.querySelectorAll('select').forEach(item => {
-        data[item.name] = item.value;
-    });
-
-    // Send and receive data using AJAX
-    requestAjax()
-
-    // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
-    checkSubToppings();
-
-    // If select box changes, update object and query again for price
-    // Could be included on function above
-    document.querySelectorAll('select').forEach(item => {
-        item.onchange = () => {
-            data[item.name] = item.value;
-            requestAjax();
-        };
-    });
-    // Retrieves CSRF data from cookie
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+const Cart = {
+    // Stores the orders as objects
+    orders: [],
+    // Gets data from local storage, converts to Json and stores in orders. If no localStorage, display message
+    getOrder() {
+        let contents = localStorage.getItem('orders');
+        if (contents) {
+            Cart.orders = JSON.parse(contents);
+        } else {
+            console.log('No orders');
         }
-        return cookieValue;
-    }
-
-    function requestAjax() {
-        // Gets token from cookie to pass CSRF check for POST requests
-        var csrftoken = getCookie('csrftoken');
+    },
+    saveOrder() {
+        console.log('Saving to local storage');
+        let localCart = Cart.orders;
+        localStorage.setItem('orders', JSON.stringify(localCart))
+    },
+    // Sends data to server using Ajax
+    requestAjax(data) {
+        var csrftoken = Cart.getCookie('csrftoken');
 
         // Initiate new request
         const request = new XMLHttpRequest();
-        request.open('POST', '../../../check-price/', true);
+        request.open('POST', '../../check-price/', true);
 
         // Set request header with CSRF token code
         request.setRequestHeader('X-CSRFToken', csrftoken);
@@ -81,7 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Add slug and quantity to localStorage when submit button is clicked
                 submitButton.addEventListener('click', event => {
                     event.preventDefault();
-                    setStorage(serverResponse.slug, serverResponse.price, serverResponse.name);
+                    Cart.setStorage(serverResponse.slug, serverResponse.price, serverResponse.name);
+                    Cart.displayAlert('Product added to cart')
                 });
 
                 // Enables form to send data again, if blocked before
@@ -109,31 +81,122 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Sending to server: ${data.category},  ${data.size} and ${data.product}`)
         // Sends data to server
         request.send(JSON.stringify(data));
-
-    }
-});
-
-
-function setStorage(slug, price, name) {
+    },
+    // Get CSRF token from cookie
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    },
     // Stores order data into localStorage
-    console.log('Adding to localStorage');
-    let quantity = document.querySelector('#id_quantity').value;
-    let order = {
-        'name': name,
-        'price': price,
-        'quantity': quantity,
-        'slug':slug
-    }
-    if (localStorage.getItem('orders')) {
-        let retrievedOrderArray = JSON.parse(localStorage.getItem('orders'));
-        retrievedOrderArray.push(order);
-        localStorage.setItem('orders', JSON.stringify(retrievedOrderArray));
-    } else {
-        let newOrderArray = [];
-        newOrderArray.push(order);
-        localStorage.setItem('orders', JSON.stringify(newOrderArray));
+    setStorage(slug, price, name) {
+        console.log('Adding to localStorage');
+        let quantity = parseInt(document.querySelector('#id_quantity').value);
+
+        if (localStorage.getItem('orders')) {
+            let retrievedOrderArray = JSON.parse(localStorage.getItem('orders'));
+            // Find if order with the same slug exists
+            let containsOrder = Cart.containsItem(slug);
+            console.log(containsOrder)
+            // Change if condition, as it is evaluating trueness of an object
+            if (containsOrder) {
+                // If order exists, just add to quantity
+
+                Cart.orders.forEach(order => {
+                    if (order.slug === slug) {
+                        console.log("Adding to existing order")
+                        order.quantity += quantity;
+                        Cart.saveOrder();
+                    }
+                })
+
+            } else {
+                // If order do not exist, create new order
+                console.log('creating new order')
+                let order = {
+                    'name': name,
+                    'price': price,
+                    'quantity': quantity,
+                    'slug':slug,
+                    'toppings': Cart.checkforToppings(),
+                }
+                retrievedOrderArray.push(order);
+                localStorage.setItem('orders', JSON.stringify(retrievedOrderArray));
+            }
+        } else {
+            console.log('creating new order array')
+            let newOrderArray = [];
+            newOrderArray.push(order);
+            localStorage.setItem('orders', JSON.stringify(newOrderArray));
+        }
+    },
+    checkforToppings() {
+        let toppings = document.querySelectorAll('.form-check-input');
+        let filtered = Array.from(toppings).filter(topping => {
+            return topping.checked;
+        })
+        console.log(filtered);
+    },
+    containsItem(slug) {
+        return Cart.orders.find(order => order.slug === slug)
+    },
+    displayAlert(message) {
+        let alertElement = document.getElementById('alertMessage');
+        alertElement.textContent = message;
+        // alertElement.classList.add('alert-primary');
+        $('#alertSystem').fadeTo(1, 1).show();
+        setTimeout(function() {
+            $("#alertSystem").fadeTo(500, 0).slideUp(500, function(){
+                $(this).hide();
+            });
+        }, 3000);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    $('#alertSystem').hide();
+    Cart.getOrder();
+    // Data object to be sent to server
+
+    const data = {};
+    const category = document.getElementById('category').textContent;
+    const product = document.getElementById('product').textContent;
+
+    // Remove ' or " from product and category
+    data['category'] = category.replace(/['"]+/g, '');
+    data['product'] = product.replace(/['"]+/g, '');
+
+    // Sets default select values into object and query initial price
+    document.querySelectorAll('select').forEach(item => {
+        data[item.name] = item.value;
+    });
+
+    // Send and receive data using AJAX
+    Cart.requestAjax(data)
+
+    // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
+    checkSubToppings();
+
+    // If select box changes, update object and query again for price
+    // Could be included on function above
+    document.querySelectorAll('select').forEach(item => {
+        item.onchange = () => {
+            data[item.name] = item.value;
+            Cart.requestAjax(data);
+        };
+    });
+
+});
 
 
 function checkSubToppings() {
@@ -159,14 +222,4 @@ function checkSubToppings() {
             })
         })
     }
-}
-
-function checkIfOrderExists(arr, slug) {
-    arr.forEach(order => {
-        if (order.slug === slug) {
-            return true;
-        } else {
-            return false;
-        }
-    })
 }

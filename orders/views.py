@@ -30,7 +30,8 @@ def index(request):
     }
     return render(request, "orders/index.html", dishes)
 
-def products(request, slug):
+def products(request, slug, category):
+    print('In products view')
     # Try to get Product subclass name by slug
     try:
         product = Product.objects.get_subclass(slug=slug)
@@ -38,14 +39,14 @@ def products(request, slug):
         raise Http404("No Product matches given that query")
 
     context = {
-        "product": product,
+        "product": product.name,
         "SubToppingForm": SubToppingForm(),
         "SubSizeForm": SubSizeForm(),
         "DinnerSizes": Dinner._meta.get_field('size').choices,
-        "type": product.__class__.__name__, # Gets class name
+        "category": product.__class__.__name__, # Gets class name
         "CartQuantity": CartQuantity()
     }
-    return render(request, "orders/product.html", context)
+    return render(request, "orders/custom.html", context)
 
 
 # Returns price when customizing a product
@@ -74,6 +75,13 @@ def check_price(request):
                 print(product)
             except ObjectDoesNotExist:
                 return JsonResponse({'price': 'Not found'})
+        else:
+            # Used for categories that already has defined a slug
+            # aka not customizable products
+            try:
+                product = Product.objects.get(slug=data.get('product'))
+            except ObjectDoesNotExist:
+                return JsonResponse({'price': 'Not found'})
     return JsonResponse({
         'price': product.price,
         'slug': product.slug ,
@@ -81,10 +89,11 @@ def check_price(request):
         'success':True
     })
 
-def hello(request):
-    return HttpResponse('Hello')
 
 def custom(request, category, product):
+    print('In custom view')
+    # View for products that haven't determined its slug yet
+    # User needs to select options to determine its slug
 
     context = {
         "category": category.capitalize(),

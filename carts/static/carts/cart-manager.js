@@ -1,5 +1,6 @@
 // Creates Cart object
 const Cart = {
+    // Stores the orders as objects
     orders: [],
     // Gets data from local storage, converts to Json and stores in orders. If no localStorage, display message
     init() {
@@ -17,11 +18,11 @@ const Cart = {
         this.orders.forEach(item => {
             total += parseFloat(item.price);
         })
-        orderTotal.innerHTML = total;
+        orderTotal.innerHTML = total.toFixed(2);
     },
     // Sync order from memory to localStorage
-    syncOrders() {
-        let cart = JSON.stringify(Cart.orders);
+    syncOrders(orders=Cart.orders) {
+        let cart = JSON.stringify(orders);
         localStorage.setItem('orders', cart);
     },
     // Find an specific order
@@ -33,19 +34,97 @@ const Cart = {
         })
         return found;
     },
+    // Change order quantity by giving its slug
     changeQtyOrder(slug, qty) {
-        Cart.orders.map(order => {
-            if (order.slug === slug) {
+        Cart.orders.find(order => {
+            if (order.slug == slug) {
                 order.quantity = qty;
-            } else {
-                console.log('No order to change quantity');
+                Cart.syncOrders();
+                // Sum orders again
             }
-        })
+        });
+    },
+    // Delete order and update localStorage by giving a slug
+    deleteOrder(slug) {
+        let updatedCart = Cart.orders.filter(order => {
+            return order.slug !== slug
+        });
+        Cart.syncOrders(updatedCart);
+    },
+    cartHasItems() {
+        let orders = localStorage.getItem('orders');
+        if (orders.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+    // Sends data to server using Ajax
+    requestAjax(data) {
+        var csrftoken = Cart.getCookie('csrftoken');
+
+        // Initiate new request
+        const request = new XMLHttpRequest();
+        request.open('POST', '/cart/add/', true);
+
+        // Set request header with CSRF token code
+        request.setRequestHeader('X-CSRFToken', csrftoken);
+        request.setRequestHeader('contentType', 'application/json; charset=utf-8');
+
+        // Callback function for when request completes
+        request.onload = () => {
+            const serverResponse = JSON.parse(request.responseText);
+            // Display boostrap alert
+            if (serverResponse.success) {
+                console.log(`Server returned a response`);
+                // Display alert
+                Cart.displayAlert(serverResponse.message);
+
+            }
+            else {
+                // Insert error message in button
+                console.log('No response from server')
+                Cart.displayAlert('No response from server');
+            }
+        }
+
+        console.log(`Sending to server...`)
+        // Sends data to server
+        let order_data = {'data': data}
+        request.send(JSON.stringify(order_data));
+    },
+    // Get CSRF token from cookie
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    },
+    displayAlert(message) {
+        let alertElement = document.getElementById('alertMessage');
+        alertElement.textContent = message;
+        // alertElement.classList.add('alert-primary');
+        $('#alertSystem').fadeTo(1, 1).show();
+        setTimeout(function() {
+            $("#alertSystem").fadeTo(500, 0).slideUp(500, function(){
+                $(this).hide();
+            });
+        }, 3000);
     }
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    $('#alertSystem').hide();
     Cart.init();
     // Needs something when cart is empty
     Cart.sumOrders();
@@ -53,6 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('This is the carts js file');
 
     showCart();
+    changeQuantity();
+    sendOrder();
 });
 
 function showCart() {
@@ -86,12 +167,6 @@ function showCart() {
 }
 
 
-function changeQuantity() {
-    document.querySelectorAll('.input-quantity').forEach(input => {
-        input.addEventListener('change')
-    })
-}
-
 // Creates the Cart item delete button
 function createDeleteElement(slug, parent) {
     let td = document.createElement('td');
@@ -102,7 +177,8 @@ function createDeleteElement(slug, parent) {
     a.innerHTML = 'Exclude';
     parent.appendChild(td);
     a.onclick = () => {
-        a.parentNode.remove();
+        a.parentNode.parentNode.remove();
+        Cart.deleteOrder(slug);
     }
 };
 
@@ -111,6 +187,7 @@ function createDeleteElement(slug, parent) {
 function createSelect(quantity, parent, slug) {
     let select = document.createElement('select');
     select.dataset.id = slug;
+    select.setAttribute('class', 'select-quantity');
     let td = document.createElement('td');
     // Creates options up to 10
     for (i = 1; i <= 10; i++) {
@@ -125,4 +202,24 @@ function createSelect(quantity, parent, slug) {
     }
     td.appendChild(select);
     parent.appendChild(td);
+}
+
+
+function changeQuantity() {
+    let selects = document.querySelectorAll('.select-quantity');
+    selects.forEach(select => {
+        select.addEventListener('change', () => {
+            let quantity = select.value;
+            let slug = select.dataset.id;
+            Cart.changeQtyOrder(slug, quantity);
+        })
+    })
+}
+
+function sendOrder() {
+    let button = document.querySelector('#confirm-order');
+    let orders = localStorage.getItem('orders');
+    button.addEventListener('click', () => {
+        Cart.requestAjax(orders);
+    })
 }

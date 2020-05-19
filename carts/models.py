@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from orders.models import Product, SubTopping, PizzaTopping
 
 class Cart(models.Model):
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
     )

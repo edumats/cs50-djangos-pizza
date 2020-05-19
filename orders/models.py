@@ -19,7 +19,7 @@ class Product(models.Model):
         return f"{self.name}"
 
     def get_absolute(self):
-        return f"/products/{self.slug}" # Remember to add a category before the slug for easier queries
+        return f"/products/{self.slug}"
 
     # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
     def downcast(self):
@@ -56,10 +56,15 @@ class Salad(Product):
     def __str__(self):
         return f"{self.name} - $ {self.price}"
 
+    def get_absolute(self):
+        return f"/products/salad/{self.slug}"
+
 class Pasta(Product):
     def __str__(self):
         return f"{self.name} - $ {self.price}"
 
+    def get_absolute(self):
+        return f"/products/pasta/{self.slug}"
 
 class Pizza(Product):
     PIZZA_SIZES = [

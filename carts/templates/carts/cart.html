@@ -6,6 +6,12 @@
 {% endblock %}
 
 {% block body %}
+    <!-- Client side alerts -->
+    <div class="alert alert-primary fade show" id="alertSystem" role="alert">
+        <p id="alertMessage"></p>
+    </div>
+
+    <!-- Cart contents -->
     <div class="container">
         <div class="row">
             <div class="col-md-8">
@@ -27,7 +33,7 @@
                     <h3 class="my-4">Your cart</h3>
                     <li class="list-group-item">Total (USD): $<span id="order-total"></span></li>
                 </ul>
-                <button class="btn btn-primary" type="button" name="confirm-order">Confirm Order</button>
+                <button class="btn btn-primary" type="button" id="confirm-order">Confirm Order</button>
             </div>
         </div>
     </div>
