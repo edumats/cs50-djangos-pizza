@@ -6,28 +6,33 @@ const Cart = {
     init() {
         let contents = localStorage.getItem('orders');
         if (contents) {
-            Cart.orders = JSON.parse(contents);
+            this.orders = JSON.parse(contents);
         } else {
             console.log('No orders');
         }
     },
     // Gets total of all order items
     sumOrders() {
+        console.log('Summing orders');
         let orderTotal = document.querySelector('#order-total');
         let total = 0;
         this.orders.forEach(item => {
-            total += parseFloat(item.price);
+            total += parseFloat(item.price * item.quantity);
         })
         orderTotal.innerHTML = total.toFixed(2);
     },
     // Sync order from memory to localStorage
     syncOrders(orders=Cart.orders) {
         let cart = JSON.stringify(orders);
+        // Also updates Cart.orders
+        this.orders = orders;
+
+        // Updates local storage
         localStorage.setItem('orders', cart);
     },
     // Find an specific order
     findOrder(slug) {
-        let found = Cart.orders.filter(order => {
+        let found = this.orders.filter(order => {
             if (order.slug === slug) {
                 return true;
             }
@@ -35,21 +40,27 @@ const Cart = {
         return found;
     },
     // Change order quantity by giving its slug
-    changeQtyOrder(slug, qty) {
-        Cart.orders.find(order => {
-            if (order.slug == slug) {
-                order.quantity = qty;
+    changeQtyOrder(slug, quantity, toppings) {
+        this.orders.find(order => {
+            // If order with same slug and toppings exist, change quantity
+            if (order.slug === slug && order.toppings.toString() === toppings) {
+                console.log('Order found, changing quantity');
+                order.quantity = quantity;
                 Cart.syncOrders();
-                // Sum orders again
+            } else {
+                console.log('Not found');
             }
         });
     },
     // Delete order and update localStorage by giving a slug
     deleteOrder(slug) {
-        let updatedCart = Cart.orders.filter(order => {
+        // Returns an array without the deleted item
+        let updatedCart = this.orders.filter(order => {
             return order.slug !== slug
         });
-        Cart.syncOrders(updatedCart);
+
+        // Sync array as the current cart status
+        this.syncOrders(updatedCart);
     },
     cartHasItems() {
         let orders = localStorage.getItem('orders');
@@ -61,7 +72,7 @@ const Cart = {
     },
     // Sends data to server using Ajax
     requestAjax(data) {
-        var csrftoken = Cart.getCookie('csrftoken');
+        var csrftoken = this.getCookie('csrftoken');
 
         // Initiate new request
         const request = new XMLHttpRequest();
@@ -78,13 +89,13 @@ const Cart = {
             if (serverResponse.success) {
                 console.log(`Server returned a response`);
                 // Display alert
-                Cart.displayAlert(serverResponse.message);
+                this.displayAlert(serverResponse.message);
 
             }
             else {
                 // Insert error message in button
                 console.log('No response from server')
-                Cart.displayAlert('No response from server');
+                this.displayAlert(serverResponse.message);
             }
         }
 
@@ -110,35 +121,61 @@ const Cart = {
         return cookieValue;
     },
     displayAlert(message) {
+        // Display alert in page
         let alertElement = document.getElementById('alertMessage');
         alertElement.textContent = message;
-        // alertElement.classList.add('alert-primary');
+
+        // Alert fades away after 3 seconds
         $('#alertSystem').fadeTo(1, 1).show();
         setTimeout(function() {
             $("#alertSystem").fadeTo(500, 0).slideUp(500, function(){
                 $(this).hide();
             });
         }, 3000);
-    }
+    },
+    changeQuantity() {
+        let selects = document.querySelectorAll('.select-quantity');
+        selects.forEach(select => {
+            select.addEventListener('change', () => {
+                let quantity = select.value;
+                let slug = select.dataset.id;
+                let toppings = select.dataset.toppings;
+                console.log(`Extracting toppings as ${toppings}`);
+                this.changeQtyOrder(slug, quantity, toppings);
+                this.sumOrders();
+            })
+        })
+    },
+    containsItem(slug, toppings) {
+        // Checks if Cart.orders contains a slug and exact array of toppings, if yes, returns true, otherwise, false
+        return this.orders.some(order => order.slug === slug && JSON.stringify(order.toppings) === JSON.stringify(toppings))
+    },
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Hides alerts
     $('#alertSystem').hide();
+
+    // Checks if there is a cart data in local storage
     Cart.init();
-    // Needs something when cart is empty
+
+    // Sums orders or puts a zero when no orders
     Cart.sumOrders();
 
-    console.log('This is the carts js file');
-
+    // Populates the cart with cart data
     showCart();
+
+    // If item quantity is changed, update cart and local storage
     changeQuantity();
+
+    // If button is clicked, send order to server
     sendOrder();
 });
 
 function showCart() {
     let orderDetails = document.querySelector('#order-details');
-    // Loop over all orders. For each order, do something
+    // Loop over all orders. For each order, create empty row
     Cart.orders.map(order => {
         let tableRow = document.createElement('tr');
         tableRow.dataset.id = order['slug'];
@@ -147,21 +184,23 @@ function showCart() {
         // Get keys from object and remove the slug key
         let keys = Object.keys(order);
 
-        // Loop over remaining keys and populate table
-        for (i = 0; i < keys.length; i++) {
-            // If quantity key is found, create a select field instead
-            if (keys[i] === 'quantity') {
-                createSelect(order[keys[i]], tableRow, order['slug']);
-                continue;
+        // Loop over keys and populate table
+        Object.keys(order).map(key => {
+            if (key === 'name' || key === 'price') {
+                let productCell = document.createElement('td');
+                productCell.innerHTML = order[key];
+                tableRow.appendChild(productCell);
+            } else if (key === 'quantity') {
+                createSelect(order.quantity, tableRow, order.slug, order.toppings);
+            } else if (key === 'toppings') {
+                if (order.toppings.length > 0) {
+                    let div = document.createElement('div');
+                    div.classList.add('ml-2')
+                    div.innerHTML = `Toppings: ${order.toppings}`;
+                    orderDetails.appendChild(div);
+                }
             }
-            // If slug key is found, do nothing
-            if (keys[i] === 'slug') {
-                continue;
-            }
-            let productCell = document.createElement('td');
-            productCell.innerHTML = order[keys[i]];
-            tableRow.appendChild(productCell);
-        }
+        })
         createDeleteElement(order['slug'], tableRow);
     })
 }
@@ -184,18 +223,19 @@ function createDeleteElement(slug, parent) {
 
 
 // Creates select box with quantity options
-function createSelect(quantity, parent, slug) {
+function createSelect(quantity, parent, slug, toppings) {
     let select = document.createElement('select');
     select.dataset.id = slug;
+    select.dataset.toppings = toppings;
     select.setAttribute('class', 'select-quantity');
     let td = document.createElement('td');
     // Creates options up to 10
-    for (i = 1; i <= 10; i++) {
+    for (let j = 1; j <= 10; j++) {
         let option = document.createElement('option');
-        option.value = i;
-        option.innerHTML = i;
+        option.value = j;
+        option.innerHTML = j;
         // If created quantity option matches the actual product quantity, select it
-        if (i === parseInt(quantity)) {
+        if (j === parseInt(quantity)) {
             option.selected = true;
         }
         select.appendChild(option);
@@ -206,20 +246,31 @@ function createSelect(quantity, parent, slug) {
 
 
 function changeQuantity() {
+    // If product quantity is changed, change qty on local storage
     let selects = document.querySelectorAll('.select-quantity');
     selects.forEach(select => {
         select.addEventListener('change', () => {
             let quantity = select.value;
             let slug = select.dataset.id;
-            Cart.changeQtyOrder(slug, quantity);
+            let toppings = select.dataset.toppings;
+            Cart.changeQtyOrder(slug, quantity, toppings);
         })
     })
 }
 
+
+// Send cart items to server
 function sendOrder() {
     let button = document.querySelector('#confirm-order');
-    let orders = localStorage.getItem('orders');
     button.addEventListener('click', () => {
+        let orders = localStorage.getItem('orders');
+        // let data = JSON.parse(orders);
+        // if (data.length > 0) {
+        //     Cart.requestAjax(data);
+        //     Cart.displayAlert('Thanks for your order');
+        // } else {
+        //     Cart.displayAlert('No items in shopping cart');
+        // }
         Cart.requestAjax(orders);
     })
 }

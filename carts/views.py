@@ -7,7 +7,7 @@ from django.contrib import messages
 import json
 
 from orders.forms import PizzaForm, PizzaToppingForm, SubToppingForm
-from orders.models import Product, PizzaTopping
+from orders.models import Product, PizzaTopping, SubTopping, Sub, Pizza
 
 from carts.models import CartItem, Cart
 
@@ -31,25 +31,68 @@ def add(request):
             print('Logged in')
             print(request.user.username)
         else:
-            print('Not logged in')
             return JsonResponse({
-                'success': False
+                'success': False,
+                'message': 'Cannot receive order if not logged in'
             })
+
+        # Create a Cart instance
+        cart = Cart.objects.create(user=request.user)
 
         string_data = json.loads(request.body)
         orders = json.loads(string_data['data'])
 
-        cart = Cart.objects.create(user=request.user)
-
+        # Loop through all order items
         for order in orders:
             try:
+                # Get the descendant of the Product that has the following slug
                 product = Product.objects.get_subclass(slug=order['slug'])
             except Product.DoesNotExist:
-                messages.error(request, f'Error: Pizza does not exist')
-                return redirect('cart')
+                return JsonResponse({
+                    'success': False,
+                    'message': f'The product {order["slug"]} in cart does not exist'
+                })
 
+            # Create a CartItem instance
             cart_item = CartItem.objects.create(item=product, quantity=order['quantity'])
+
+            # Checks if product is a sub
+            if isinstance(product, Sub):
+                # Check if product has toppings
+                if order['toppings']:
+                    # Loop through all toppings in cart item
+                    for topping in order['toppings']:
+                        try:
+                            sub_topping = SubTopping.objects.get(name=topping)
+                        except SubTopping.DoesNotExist:
+                            return JsonResponse({
+                                'success': False,
+                                'message': f'Sub topping {topping} in cart does not exist'
+                            })
+                        # For each topping, add to subtoppings field
+                        cart_item.sub_toppings.add(sub_topping)
+
+            if isinstance(product, Pizza):
+                # Check if product has toppings
+                if order['toppings']:
+                    # Loop through all toppings in cart item
+                    for topping in order['toppings']:
+                        try:
+                            pizza_topping = PizzaTopping.objects.get(name=topping)
+                        except PizzaTopping.DoesNotExist:
+                            return JsonResponse({
+                                'success': False,
+                                'message': f'Pizza topping {topping} in cart does not exist'
+                            })
+                        # For each topping, add to subtoppings field
+                        cart_item.pizza_toppings.add(pizza_topping)
+
+            # Add cartItem to Cart
             cart.items.add(cart_item)
+
+            # Change Cart status to ordered
+            cart.ordered = True
+            cart.save()
 
         return JsonResponse({
             'success':True,

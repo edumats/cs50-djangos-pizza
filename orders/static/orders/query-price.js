@@ -17,7 +17,6 @@ const Cart = {
         }
     },
     saveOrder() {
-        console.log('Saving to local storage');
         let localCart = Cart.orders;
         localStorage.setItem('orders', JSON.stringify(localCart))
     },
@@ -27,7 +26,7 @@ const Cart = {
 
         // Initiate new request
         const request = new XMLHttpRequest();
-        request.open('POST', '../../check-price/', true);
+        request.open('POST', '/products/check-price/', true);
 
         // Set request header with CSRF token code
         request.setRequestHeader('X-CSRFToken', csrftoken);
@@ -49,10 +48,14 @@ const Cart = {
 
                 let submitButton = document.querySelector('#order-button');
 
+                // Rechecks if toppings are selected, updates price
+                Cart.priceToppings();
+
                 // Add slug and quantity to localStorage when submit button is clicked
                 submitButton.addEventListener('click', event => {
                     event.preventDefault();
-                    Cart.setStorage(serverResponse.slug, serverResponse.price, serverResponse.name);
+                    let price = document.querySelector('#price').innerHTML;
+                    Cart.setStorage(serverResponse.slug, price, serverResponse.name);
                     Cart.displayAlert('Product added to cart')
                 });
 
@@ -63,10 +66,7 @@ const Cart = {
             }
             else {
                 // Insert error message in button
-                document.querySelector('#order-button').innerHTML = 'Error retrieving price';
-
-                // Cleans price
-                document.querySelector('#price').innerHTML = '';
+                document.querySelector('#price').innerHTML = 'Error retrieving price';
 
                 //Removes form action url
                 document.querySelector('#order-form').action = '#';
@@ -87,7 +87,7 @@ const Cart = {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             let cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
+            for (let i = 0; i < cookies.length; i++) {
                 let cookie = cookies[i].trim();
                 // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
@@ -100,79 +100,101 @@ const Cart = {
     },
     // Stores order data into localStorage
     setStorage(slug, price, name) {
-        console.log('Adding to localStorage');
+
         let quantity = parseInt(document.querySelector('#id_quantity').value);
 
-        if (localStorage.getItem('orders')) {
-            let retrievedOrderArray = JSON.parse(localStorage.getItem('orders'));
-            // Find if order with the same slug exists
-            let containsOrder = Cart.containsItem(slug);
-            console.log(containsOrder)
-            // Change if condition, as it is evaluating trueness of an object
-            if (containsOrder) {
-                // If order exists, just add to quantity
+        let selectedToppings = Cart.addToppings();
 
-                Cart.orders.forEach(order => {
-                    if (order.slug === slug) {
-                        console.log("Adding to existing order")
-                        order.quantity += quantity;
-                        Cart.saveOrder();
-                    }
-                })
+        // Find if order with the same slug and toppings exists
+        let containsOrder = Cart.containsItem(slug, selectedToppings);
 
-            } else {
-                // If order do not exist, create new order
-                console.log('creating new order')
-                let order = {
-                    'name': name,
-                    'price': price,
-                    'quantity': quantity,
-                    'slug':slug,
-                    'toppings': Cart.checkforToppings(),
-                }
-                retrievedOrderArray.push(order);
-                localStorage.setItem('orders', JSON.stringify(retrievedOrderArray));
-            }
+        // Change if condition, as it is evaluating trueness of an object
+        if (containsOrder) {
+            // If order exists, just add to quantity
+
+            Cart.orders.forEach(order => {
+                console.log("Adding to existing order")
+                order.quantity += quantity;
+                Cart.saveOrder();
+            })
+
         } else {
-            console.log('creating new order array')
-            let newOrderArray = [];
-            newOrderArray.push(order);
-            localStorage.setItem('orders', JSON.stringify(newOrderArray));
+            // If order do not exist, create new order
+            console.log('creating new order')
+
+            let order = {
+                'name': name,
+                'price': price,
+                'quantity': quantity,
+                'slug':slug,
+                'toppings': Cart.addToppings(),
+            }
+
+            Cart.orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(Cart.orders));
         }
     },
-    checkforToppings() {
+    addToppings() {
+        // Checks if there are checked toppings, if yes, adds to array, returns array
+        let resultArr = [];
         let toppings = document.querySelectorAll('.form-check-input');
-        let filtered = Array.from(toppings).filter(topping => {
-            return topping.checked;
+        let filtered = toppings.forEach(topping => {
+            if (topping.checked) {
+                console.log('Adding topping')
+                resultArr.push(topping.value);
+            }
         })
-        console.log(filtered);
+        return resultArr;
     },
-    containsItem(slug) {
-        return Cart.orders.find(order => order.slug === slug)
+    containsItem(slug, toppings) {
+        // Checks if Cart.orders contains a slug and exact array of toppings, if yes, returns true, otherwise, false
+        return Cart.orders.some(order => order.slug === slug && JSON.stringify(order.toppings) === JSON.stringify(toppings))
     },
     displayAlert(message) {
+        // Display alert in page
         let alertElement = document.getElementById('alertMessage');
         alertElement.textContent = message;
-        // alertElement.classList.add('alert-primary');
+
+        // Alert fades away after 3 seconds
         $('#alertSystem').fadeTo(1, 1).show();
         setTimeout(function() {
             $("#alertSystem").fadeTo(500, 0).slideUp(500, function(){
                 $(this).hide();
             });
         }, 3000);
+    },
+    priceToppings() {
+        // If topping box is checked or unchecked after product size or type is changed, update item price accordingly
+        const subToppings = document.getElementsByName('sub_toppings');
+
+        if (subToppings.length > 0) {
+            subToppings.forEach(topping => {
+                // If a topping box is checked, sum to product price, if unchecked, subtract from price
+                if (topping.checked) {
+                    let toppingPrice = topping.getAttribute('data-price');
+                    let oldPrice = document.getElementById('price').innerHTML;
+                    let result = parseFloat(oldPrice) + parseFloat(toppingPrice);
+                    // Gets float result and convert to string with 2 decimal places
+                    document.getElementById('price').innerHTML = result.toFixed(2);
+                }
+            });
+        }
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Hides alert
     $('#alertSystem').hide();
-    Cart.getOrder();
-    // Data object to be sent to server
 
+    // Gets cart data from localstorage
+    Cart.getOrder();
+
+    // Data object to be sent to server
     const data = {};
     const category = document.getElementById('category').textContent;
     const product = document.getElementById('product').textContent;
 
-    // Remove ' or " from product and category
+    // Remove ' or " from product and category that are in hidden in the page
     data['category'] = category.replace(/['"]+/g, '');
     data['product'] = product.replace(/['"]+/g, '');
 
@@ -181,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         data[item.name] = item.value;
     });
 
-    // Send and receive data using AJAX
+    // Query for initial item price
     Cart.requestAjax(data)
 
     // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
@@ -198,13 +220,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-
+// If topping is checked or unchecked, update price
 function checkSubToppings() {
+    console.log('Checking toppings');
     // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
     const subToppings = document.getElementsByName('sub_toppings');
     if (subToppings.length > 0) {
         subToppings.forEach(topping => {
             topping.addEventListener('change', () => {
+                // If a topping box is checked, sum to product price, if unchecked, subtract from price
                 if (topping.checked) {
                     let attribute = topping.getAttribute('data-price');
                     let toppingName = topping.getAttribute('value');

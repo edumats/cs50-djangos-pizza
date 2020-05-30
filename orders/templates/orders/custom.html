@@ -12,13 +12,13 @@
         <p id="alertMessage"></p>
     </div>
 
-    <div class="container">
+    <div class="container my-5">
         <div class="row">
-            <div class="col-md-3 text-center mt-5">
+            <div class="col-md-3 text-center">
                 <img src="https://via.placeholder.com/150" class="img-fluid"/>
             </div>
 
-            <div class="col-md-9 mt-5">
+            <div class="col-md-9">
                 {% if category == 'Pizza' or category == 'Sub' or category == 'Dinner' %}
                     <h1>{{ product }} {{ category }}</h1>
                 {% elif category == 'Pasta' or category == 'Salad' %}
@@ -50,6 +50,7 @@
     </div>
     {{ category|json_script:"category" }}
     {{ product|json_script:"product" }}
+
     <!--JS File -->
     <script type="text/javascript" src="{% static 'orders/query-price.js' %}"></script>
 {% endblock %}

@@ -44,7 +44,7 @@ def products(request, slug, category):
         "SubSizeForm": SubSizeForm(),
         "DinnerSizes": Dinner._meta.get_field('size').choices,
         "category": product.__class__.__name__, # Gets class name
-        "CartQuantity": CartQuantity()
+        "CartQuantity": CartQuantity(),
     }
     return render(request, "orders/custom.html", context)
 
@@ -79,7 +79,7 @@ def check_price(request):
             # Used for categories that already has defined a slug
             # aka not customizable products
             try:
-                product = Product.objects.get(slug=data.get('product'))
+                product = Product.objects.get(name=data.get('product'))
             except ObjectDoesNotExist:
                 return JsonResponse({'price': 'Not found'})
     return JsonResponse({

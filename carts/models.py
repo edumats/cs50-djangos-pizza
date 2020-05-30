@@ -37,5 +37,9 @@ class CartItem(models.Model):
         else:
             return f"{self.item.name} - No toppings - Quantity: {self.quantity}"
 
+    # Get the total price, considering base product, toppings(if any) and quantity
     def get_total_price(self):
+        if self.sub_toppings.exists():
+            # Base item price + sum of all topping prices that are related to this product * quantity
+            return (self.item.price + sum([topping.price for topping in self.sub_toppings.all()])) * self.quantity
         return self.quantity * self.item.price
