@@ -5,10 +5,16 @@ const Cart = {
     // Gets data from local storage, converts to Json and stores in orders. If no localStorage, display message
     init() {
         let contents = localStorage.getItem('orders');
-        if (contents) {
-            this.orders = JSON.parse(contents);
+        let ordersArr= JSON.parse(contents);
+        this.updateCartStatus(ordersArr);
+    },
+    updateCartStatus(arr=Cart.orders) {
+        if (arr.length > 0) {
+            this.orders = arr;
+            this.sumOrders();
+            this.showCart();
         } else {
-            console.log('No orders');
+            document.querySelector('#order-details').innerHTML = '<h5>No items in cart</h5>';
         }
     },
     // Gets total of all order items
@@ -55,15 +61,17 @@ const Cart = {
     // Delete order and update localStorage by giving a slug
     deleteOrder(slug) {
         // Returns an array without the deleted item
-        let updatedCart = this.orders.filter(order => {
-            return order.slug !== slug
-        });
+        let updatedCart = this.orders.filter(order => order.slug !== slug);
 
         // Sync array as the current cart status
         this.syncOrders(updatedCart);
+
+        this.updateCartStatus();
+
+        this.displayAlert('Item deleted from cart');
     },
     cartHasItems() {
-        let orders = localStorage.getItem('orders');
+        let orders = this.orders;
         if (orders.length > 0) {
             return true;
         } else {
@@ -90,11 +98,10 @@ const Cart = {
                 console.log(`Server returned a response`);
                 // Display alert
                 this.displayAlert(serverResponse.message);
-
+                Cart.emptyCart();
             }
             else {
-                // Insert error message in button
-                console.log('No response from server')
+                // Display error from server
                 this.displayAlert(serverResponse.message);
             }
         }
@@ -150,6 +157,108 @@ const Cart = {
         // Checks if Cart.orders contains a slug and exact array of toppings, if yes, returns true, otherwise, false
         return this.orders.some(order => order.slug === slug && JSON.stringify(order.toppings) === JSON.stringify(toppings))
     },
+    emptyCart() {
+        console.log('Empty cart');
+        this.syncOrders([]);
+        document.querySelector('#order-details').innerHTML = '';
+        this.showCart();
+    },
+    showCart() {
+        let orderDetails = document.querySelector('#order-details');
+        // Loop over all orders. For each order, create empty row
+        this.orders.map((order, index) => {
+            let tableRow = document.createElement('tr');
+            tableRow.dataset.id = order['slug'];
+            orderDetails.appendChild(tableRow);
+
+            // Get keys from object and remove the slug key
+            let keys = Object.keys(order);
+
+            // Loop over keys and populate table
+            Object.keys(order).map(key => {
+                if (key === 'name' || key === 'price') {
+                    let productCell = document.createElement('td');
+                    productCell.innerHTML = order[key];
+                    if (key === 'name') {
+                        productCell.setAttribute('id', index)
+                    }
+                    tableRow.appendChild(productCell);
+                } else if (key === 'quantity') {
+                    createSelect(order.quantity, tableRow, order.slug, order.toppings);
+                } else if (key === 'toppings') {
+                    if (order.toppings.length > 0) {
+                        let span = document.createElement('span');
+                        span.innerHTML = `<br> Toppings: ${order.toppings}`;
+                        targetProductName = document.getElementById(index);
+                        targetProductName.appendChild(span);
+                    }
+                }
+            })
+            createDeleteElement(order['slug'], tableRow);
+        })
+
+        // Creates the Cart item delete button
+        function createDeleteElement(slug, parent) {
+            let td = document.createElement('td');
+            let a = document.createElement('a')
+            td.appendChild(a);
+            a.setAttribute('href', '#');
+            a.dataset.id = slug;
+            a.innerHTML = 'Exclude';
+            parent.appendChild(td);
+            a.onclick = () => {
+                a.parentNode.parentNode.remove();
+                Cart.deleteOrder(slug);
+            }
+        };
+
+
+        // Creates select box with quantity options
+        function createSelect(quantity, parent, slug, toppings) {
+            let select = document.createElement('select');
+            select.dataset.id = slug;
+            select.dataset.toppings = toppings;
+            select.setAttribute('class', 'select-quantity');
+            let td = document.createElement('td');
+            // Creates options up to 10
+            for (let j = 1; j <= 10; j++) {
+                let option = document.createElement('option');
+                option.value = j;
+                option.innerHTML = j;
+                // If created quantity option matches the actual product quantity, select it
+                if (j === parseInt(quantity)) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+            td.appendChild(select);
+            parent.appendChild(td);
+        }
+    },
+    // Send cart items to server
+    sendOrder() {
+        let button = document.querySelector('#confirm-order');
+        button.addEventListener('click', () => {
+            if (this.cartHasItems()) {
+                let orders = localStorage.getItem('orders');
+                Cart.requestAjax(orders);
+            } else {
+                this.displayAlert('No items in cart')
+            }
+        })
+    },
+    changeQuantity() {
+        // If product quantity is changed, change qty on local storage
+        let selects = document.querySelectorAll('.select-quantity');
+        selects.forEach(select => {
+            select.addEventListener('change', () => {
+                let quantity = select.value;
+                let slug = select.dataset.id;
+                let toppings = select.dataset.toppings;
+                Cart.changeQtyOrder(slug, quantity, toppings);
+            })
+        })
+    }
 }
 
 
@@ -160,117 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Checks if there is a cart data in local storage
     Cart.init();
 
-    // Sums orders or puts a zero when no orders
-    Cart.sumOrders();
-
-    // Populates the cart with cart data
-    showCart();
-
     // If item quantity is changed, update cart and local storage
-    changeQuantity();
+    Cart.changeQuantity();
 
     // If button is clicked, send order to server
-    sendOrder();
+    Cart.sendOrder();
 });
-
-function showCart() {
-    let orderDetails = document.querySelector('#order-details');
-    // Loop over all orders. For each order, create empty row
-    Cart.orders.map(order => {
-        let tableRow = document.createElement('tr');
-        tableRow.dataset.id = order['slug'];
-        orderDetails.appendChild(tableRow);
-
-        // Get keys from object and remove the slug key
-        let keys = Object.keys(order);
-
-        // Loop over keys and populate table
-        Object.keys(order).map(key => {
-            if (key === 'name' || key === 'price') {
-                let productCell = document.createElement('td');
-                productCell.innerHTML = order[key];
-                tableRow.appendChild(productCell);
-            } else if (key === 'quantity') {
-                createSelect(order.quantity, tableRow, order.slug, order.toppings);
-            } else if (key === 'toppings') {
-                if (order.toppings.length > 0) {
-                    let div = document.createElement('div');
-                    div.classList.add('ml-2')
-                    div.innerHTML = `Toppings: ${order.toppings}`;
-                    orderDetails.appendChild(div);
-                }
-            }
-        })
-        createDeleteElement(order['slug'], tableRow);
-    })
-}
-
-
-// Creates the Cart item delete button
-function createDeleteElement(slug, parent) {
-    let td = document.createElement('td');
-    let a = document.createElement('a')
-    td.appendChild(a);
-    a.setAttribute('href', '#');
-    a.dataset.id = slug;
-    a.innerHTML = 'Exclude';
-    parent.appendChild(td);
-    a.onclick = () => {
-        a.parentNode.parentNode.remove();
-        Cart.deleteOrder(slug);
-    }
-};
-
-
-// Creates select box with quantity options
-function createSelect(quantity, parent, slug, toppings) {
-    let select = document.createElement('select');
-    select.dataset.id = slug;
-    select.dataset.toppings = toppings;
-    select.setAttribute('class', 'select-quantity');
-    let td = document.createElement('td');
-    // Creates options up to 10
-    for (let j = 1; j <= 10; j++) {
-        let option = document.createElement('option');
-        option.value = j;
-        option.innerHTML = j;
-        // If created quantity option matches the actual product quantity, select it
-        if (j === parseInt(quantity)) {
-            option.selected = true;
-        }
-        select.appendChild(option);
-    }
-    td.appendChild(select);
-    parent.appendChild(td);
-}
-
-
-function changeQuantity() {
-    // If product quantity is changed, change qty on local storage
-    let selects = document.querySelectorAll('.select-quantity');
-    selects.forEach(select => {
-        select.addEventListener('change', () => {
-            let quantity = select.value;
-            let slug = select.dataset.id;
-            let toppings = select.dataset.toppings;
-            Cart.changeQtyOrder(slug, quantity, toppings);
-        })
-    })
-}
-
-
-// Send cart items to server
-function sendOrder() {
-    let button = document.querySelector('#confirm-order');
-    button.addEventListener('click', () => {
-        let orders = localStorage.getItem('orders');
-        // let data = JSON.parse(orders);
-        // if (data.length > 0) {
-        //     Cart.requestAjax(data);
-        //     Cart.displayAlert('Thanks for your order');
-        // } else {
-        //     Cart.displayAlert('No items in shopping cart');
-        // }
-        Cart.requestAjax(orders);
-    })
-}

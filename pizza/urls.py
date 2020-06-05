@@ -24,6 +24,7 @@ from carts import views as cart_views
 
 urlpatterns = [
     path("", product_views.index, name="index"),
+    path("my-orders/", product_views.my_orders, name="my-orders"),
     path("products/", include("orders.urls")),
     path("login/", auth_views.LoginView.as_view(template_name='users/login.html'), name="login"),
     path("logout/", auth_views.LogoutView.as_view(template_name='users/logout.html'), name="logout"),

@@ -53,10 +53,11 @@ def add(request):
                     'message': f'The product {order["slug"]} in cart does not exist'
                 })
 
-            # Create a CartItem instance
+
+            # Create or find a CartItem instance
             cart_item = CartItem.objects.create(item=product, quantity=order['quantity'])
 
-            # Checks if product is a sub
+            # Checks if product is a Sub
             if isinstance(product, Sub):
                 # Check if product has toppings
                 if order['toppings']:
@@ -72,6 +73,7 @@ def add(request):
                         # For each topping, add to subtoppings field
                         cart_item.sub_toppings.add(sub_topping)
 
+            # Checks if product is a Pizza
             if isinstance(product, Pizza):
                 # Check if product has toppings
                 if order['toppings']:

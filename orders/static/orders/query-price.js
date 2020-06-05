@@ -5,8 +5,65 @@
 
 
 const Cart = {
-    // Stores the orders as objects
+    // Use the array of manipulating data and send to local storage afterwards
+    // Cart items are stored as objects in this array
     orders: [],
+    init() {
+        // Gets cart data from localstorage
+        this.getOrder();
+
+        // Data object to be sent to server
+        const data = {};
+
+        // Category and product are hidden in html and are used for simplyfying the queries to server
+        const category = document.getElementById('category').textContent;
+        const product = document.getElementById('product').textContent;
+
+        // Remove ' or " from product and category that are in hidden in the page
+        data['category'] = category.replace(/['"]+/g, '');
+        data['product'] = product.replace(/['"]+/g, '');
+
+        // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
+        if (data['category'] === 'Sub') {
+            this.checkSubToppings();
+            // As this specific sub has no small size, I removed the small option from select box
+            if (data['product'] === 'Sausage, Peppers and Onions') {
+                let options = document.querySelector('#id_size').options;
+                // Selects Large option
+                options[1].selected = true;
+                // Deselects Small option
+                options[0].selected = false;
+                // Disables Small option
+                options[0].disabled = true;
+            }
+        }
+
+        // Sets default select values into object and query initial price
+        document.querySelectorAll('select').forEach(item => {
+            data[item.name] = item.value;
+        });
+
+        // Query for initial item price
+        this.requestAjax(data)
+
+        // If it's a Pizza, change number of toppings message
+        if (data['category'] === 'Pizza') {
+            this.displayPizzaToppingMessage();
+        }
+
+
+        // If select box changes, update object and query again for price
+        document.querySelectorAll('select').forEach(item => {
+            item.onchange = () => {
+                // If it's a Pizza, change number of toppings message
+                if (data['category'] === 'Pizza') {
+                    this.displayPizzaToppingMessage();
+                }
+                data[item.name] = item.value;
+                this.requestAjax(data);
+            };
+        });
+    },
     // Gets data from local storage, converts to Json and stores in orders. If no localStorage, display message
     getOrder() {
         let contents = localStorage.getItem('orders');
@@ -48,15 +105,34 @@ const Cart = {
 
                 let submitButton = document.querySelector('#order-button');
 
-                // Rechecks if toppings are selected, updates price
-                Cart.priceToppings();
+                if (data['category'] === 'Sub') {
+                    // Rechecks if toppings are selected, updates price
+                    this.priceToppings();
+                }
 
                 // Add slug and quantity to localStorage when submit button is clicked
                 submitButton.addEventListener('click', event => {
+                    // Prevents page from reloading
                     event.preventDefault();
-                    let price = document.querySelector('#price').innerHTML;
-                    Cart.setStorage(serverResponse.slug, price, serverResponse.name);
-                    Cart.displayAlert('Product added to cart')
+
+                    // If product is Pizza
+                    if (data['category'] === 'Pizza') {
+                        // Check if number of toppings corresponds to number of allowed toppings
+                        if (this.checkPizzaToppings()) {
+                            let price = document.querySelector('#price').innerHTML;
+                            Cart.setStorage(serverResponse.slug, price, serverResponse.name);
+                            Cart.displayAlert('Product added to cart')
+                        } else {
+                            Cart.displayAlert('Please remove one or more toppings to place the order')
+                        }
+                    } else {
+                        // For other product categories
+                        let price = document.querySelector('#price').innerHTML;
+                        Cart.setStorage(serverResponse.slug, price, serverResponse.name);
+                        Cart.displayAlert('Product added to cart')
+                    }
+
+
                 });
 
                 // Enables form to send data again, if blocked before
@@ -65,8 +141,11 @@ const Cart = {
                 };
             }
             else {
+                console.log('Product not found');
                 // Insert error message in button
                 document.querySelector('#price').innerHTML = 'Error retrieving price';
+
+                this.displayAlert(serverResponse.message);
 
                 //Removes form action url
                 document.querySelector('#order-form').action = '#';
@@ -179,6 +258,69 @@ const Cart = {
                 }
             });
         }
+    },
+    checkSubToppings() {
+        console.log('Checking sub toppings');
+        // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
+        const subToppings = document.getElementsByName('sub_toppings');
+        if (subToppings.length > 0) {
+            subToppings.forEach(topping => {
+                topping.addEventListener('change', () => {
+                    // If a topping box is checked, sum to product price, if unchecked, subtract from price
+                    if (topping.checked) {
+                        let attribute = topping.getAttribute('data-price');
+                        let toppingName = topping.getAttribute('value');
+                        let oldPrice = document.getElementById('price').innerHTML;
+                        let result = parseFloat(oldPrice) + parseFloat(attribute);
+                        // Gets float result and convert to string with 2 decimal places
+                        document.getElementById('price').innerHTML = result.toFixed(2);
+                    } else {
+                        let attribute = topping.getAttribute('data-price');
+                        let oldPrice = document.getElementById('price').innerHTML;
+                        let result = parseFloat(oldPrice) - parseFloat(attribute);
+                        // Gets float result and convert to string with 2 decimal places
+                        document.getElementById('price').innerHTML = result.toFixed(2);
+                    }
+                })
+            })
+        }
+    },
+    checkPizzaToppings() {
+        let max = this.maxToppings();
+        checkedToppings = document.querySelectorAll('.form-check-input:checked');
+        if (checkedToppings.length > max) {
+            this.displayAlert('Maximum number of toppings reached')
+            return false;
+        }
+        return true;
+    },
+    // Returns the number of toppings that needs to be checked depending on each pizza topping type
+    maxToppings() {
+        let toppingValue = document.getElementById('id_topping').value;
+
+        switch (toppingValue) {
+            case 'CH':
+                return 0;
+                break;
+            case '1T':
+                return 1;
+                break;
+            case '2T':
+                return 2;
+                break;
+            case '3T':
+                return 3;
+                break;
+            case 'SP':
+                return 5;
+                break;
+        }
+    },
+    displayPizzaToppingMessage() {
+        // Select small text under the topping select box
+        let smallText = document.getElementById('hint_id_topping');
+        let message = `You can add ${this.maxToppings()} toppings`;
+        smallText.innerHTML = message;
     }
 }
 
@@ -186,64 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hides alert
     $('#alertSystem').hide();
 
-    // Gets cart data from localstorage
-    Cart.getOrder();
-
-    // Data object to be sent to server
-    const data = {};
-    const category = document.getElementById('category').textContent;
-    const product = document.getElementById('product').textContent;
-
-    // Remove ' or " from product and category that are in hidden in the page
-    data['category'] = category.replace(/['"]+/g, '');
-    data['product'] = product.replace(/['"]+/g, '');
-
-    // Sets default select values into object and query initial price
-    document.querySelectorAll('select').forEach(item => {
-        data[item.name] = item.value;
-    });
-
-    // Query for initial item price
-    Cart.requestAjax(data)
-
-    // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
-    checkSubToppings();
-
-    // If select box changes, update object and query again for price
-    // Could be included on function above
-    document.querySelectorAll('select').forEach(item => {
-        item.onchange = () => {
-            data[item.name] = item.value;
-            Cart.requestAjax(data);
-        };
-    });
-
+    // Initialize Cart functions
+    Cart.init();
 });
-
-// If topping is checked or unchecked, update price
-function checkSubToppings() {
-    console.log('Checking toppings');
-    // If toppings checkbox is checked, add to price and to data field, if unchecked, subtract from price and remove from Data
-    const subToppings = document.getElementsByName('sub_toppings');
-    if (subToppings.length > 0) {
-        subToppings.forEach(topping => {
-            topping.addEventListener('change', () => {
-                // If a topping box is checked, sum to product price, if unchecked, subtract from price
-                if (topping.checked) {
-                    let attribute = topping.getAttribute('data-price');
-                    let toppingName = topping.getAttribute('value');
-                    let oldPrice = document.getElementById('price').innerHTML;
-                    let result = parseFloat(oldPrice) + parseFloat(attribute);
-                    // Gets float result and convert to string with 2 decimal places
-                    document.getElementById('price').innerHTML = result.toFixed(2);
-                } else {
-                    let attribute = topping.getAttribute('data-price');
-                    let oldPrice = document.getElementById('price').innerHTML;
-                    let result = parseFloat(oldPrice) - parseFloat(attribute);
-                    // Gets float result and convert to string with 2 decimal places
-                    document.getElementById('price').innerHTML = result.toFixed(2);
-                }
-            })
-        })
-    }
-}

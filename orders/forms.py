@@ -14,7 +14,9 @@ class PizzaToppingForm(Form):
         widget=CheckboxSelectMultiple(),
         help_text="Choose your toppings",
         required=False,
-        to_field_name="name"
+        # Sets each option to the name field value, instead of integers
+        to_field_name="name",
+        label='Pizza Toppings'
         )
 
 
@@ -31,7 +33,8 @@ class SubToppingForm(Form):
         widget=CheckboxSelectMultiple(attrs={'data-price':'0.50', 'autocomplete': 'off'}),
         help_text='Choose your toppings',
         required=False,
-        to_field_name="name"
+        to_field_name="name",
+        label='Sub Toppings'
     )
 
 

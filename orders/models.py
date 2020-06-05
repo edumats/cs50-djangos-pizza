@@ -130,4 +130,4 @@ class SubTopping(models.Model):
     price = models.DecimalField(max_digits=5, decimal_places=2, help_text="Topping price")
 
     def __str__(self):
-        return f"{self.name} : $ {self.price}"
+        return f"{self.name}"
