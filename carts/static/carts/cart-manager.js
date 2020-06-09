@@ -9,12 +9,16 @@ const Cart = {
         this.updateCartStatus(ordersArr);
     },
     updateCartStatus(arr=Cart.orders) {
+        console.log('Updating cart')
         if (arr.length > 0) {
             this.orders = arr;
             this.sumOrders();
             this.showCart();
+            // If item quantity is changed, update cart and local storage
+            Cart.changeQuantity();
         } else {
             document.querySelector('#order-details').innerHTML = '<h5>No items in cart</h5>';
+            document.querySelector('#order-total').innerHTML = '';
         }
     },
     // Gets total of all order items
@@ -53,6 +57,7 @@ const Cart = {
                 console.log('Order found, changing quantity');
                 order.quantity = quantity;
                 Cart.syncOrders();
+                Cart.updateCartStatus()();
             } else {
                 console.log('Not found');
             }
@@ -140,19 +145,6 @@ const Cart = {
             });
         }, 3000);
     },
-    changeQuantity() {
-        let selects = document.querySelectorAll('.select-quantity');
-        selects.forEach(select => {
-            select.addEventListener('change', () => {
-                let quantity = select.value;
-                let slug = select.dataset.id;
-                let toppings = select.dataset.toppings;
-                console.log(`Extracting toppings as ${toppings}`);
-                this.changeQtyOrder(slug, quantity, toppings);
-                this.sumOrders();
-            })
-        })
-    },
     containsItem(slug, toppings) {
         // Checks if Cart.orders contains a slug and exact array of toppings, if yes, returns true, otherwise, false
         return this.orders.some(order => order.slug === slug && JSON.stringify(order.toppings) === JSON.stringify(toppings))
@@ -165,6 +157,7 @@ const Cart = {
     },
     showCart() {
         let orderDetails = document.querySelector('#order-details');
+        orderDetails.innerHTML = '';
         // Loop over all orders. For each order, create empty row
         this.orders.map((order, index) => {
             let tableRow = document.createElement('tr');
@@ -194,8 +187,20 @@ const Cart = {
                     }
                 }
             })
+            createItemTotal(order['quantity'], order['price'], tableRow);
             createDeleteElement(order['slug'], tableRow);
         })
+
+        // Create Item Total item
+        function createItemTotal(quantity, price, parent) {
+            let td = document.createElement('td');
+            let span = document.createElement('span');
+            let total = quantity * price
+            span.innerHTML = total.toFixed(2);
+            td.innerHTML = '$';
+            td.appendChild(span);
+            parent.appendChild(td);
+        }
 
         // Creates the Cart item delete button
         function createDeleteElement(slug, parent) {
@@ -268,9 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Checks if there is a cart data in local storage
     Cart.init();
-
-    // If item quantity is changed, update cart and local storage
-    Cart.changeQuantity();
 
     // If button is clicked, send order to server
     Cart.sendOrder();

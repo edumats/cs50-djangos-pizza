@@ -1,3 +1,7 @@
+main {
+    min-height: 58vh;
+}
+
 .card {
     margin: 0;
 }
@@ -32,7 +36,7 @@ form input {
 }
 
 /*
- * Header
+ * Header Menu buttons
  */
 
 .nav-masthead .nav-link {

@@ -94,10 +94,13 @@ const Cart = {
             const serverResponse = JSON.parse(request.responseText);
 
             if (serverResponse.success) {
-                console.log(`Server returned: ${serverResponse.price}`);
+                console.log(`Server returned: ${serverResponse.image}`);
                 // Adds price to submit button
                 content = `${serverResponse.price}`;
                 document.querySelector('#price').innerHTML = content;
+
+                // Sets product image
+                this.setProductImage(serverResponse.image);
 
                 // Add action url to form
                 // document.querySelector('#order-form').action = `../../cart/add/${serverResponse.slug}`;
@@ -121,6 +124,8 @@ const Cart = {
                         if (this.checkPizzaToppings()) {
                             let price = document.querySelector('#price').innerHTML;
                             Cart.setStorage(serverResponse.slug, price, serverResponse.name);
+                            // Scrolls to top of page
+                            window.scrollTo(0, 0);
                             Cart.displayAlert('Product added to cart')
                         } else {
                             Cart.displayAlert('Please remove one or more toppings to place the order')
@@ -129,6 +134,8 @@ const Cart = {
                         // For other product categories
                         let price = document.querySelector('#price').innerHTML;
                         Cart.setStorage(serverResponse.slug, price, serverResponse.name);
+                        // Scrolls to top of page
+                        window.scrollTo(0, 0);
                         Cart.displayAlert('Product added to cart')
                     }
 
@@ -321,6 +328,10 @@ const Cart = {
         let smallText = document.getElementById('hint_id_topping');
         let message = `You can add ${this.maxToppings()} toppings`;
         smallText.innerHTML = message;
+    },
+    setProductImage(link) {
+        let image = document.querySelector('#product-image');
+        image.setAttribute('src', link);
     }
 }
 

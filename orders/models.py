@@ -5,7 +5,6 @@ class Product(models.Model):
     name = models.CharField(max_length=100, blank=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     slug = models.SlugField(max_length=120, unique=True)
-    image = models.URLField(default='https://via.placeholder.com/150')
     description = models.CharField(max_length=500, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -44,6 +43,7 @@ class Dinner(Product):
 
 class DinnerType(models.Model):
     name = models.CharField(max_length=70)
+    image = models.URLField(default='https://via.placeholder.com/150')
 
     def __str__(self):
         return self.name
@@ -53,6 +53,7 @@ class DinnerType(models.Model):
 
 
 class Salad(Product):
+    image = models.URLField(default='https://via.placeholder.com/150')
     def __str__(self):
         return f"{self.name} - $ {self.price}"
 
@@ -60,6 +61,7 @@ class Salad(Product):
         return f"/products/salad/{self.slug}"
 
 class Pasta(Product):
+    image = models.URLField(default='https://via.placeholder.com/150')
     def __str__(self):
         return f"{self.name} - $ {self.price}"
 
@@ -88,6 +90,7 @@ class Pizza(Product):
 
 class PizzaType(models.Model):
     name = models.CharField(max_length=70)
+    image = models.URLField(default='https://via.placeholder.com/150')
 
     def __str__(self):
         return self.name
@@ -117,6 +120,7 @@ class Sub(Product):
 
 class SubType(models.Model):
     name = models.CharField(max_length=70)
+    image = models.URLField(default='https://via.placeholder.com/150')
 
     def __str__(self):
         return self.name

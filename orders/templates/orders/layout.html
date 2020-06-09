@@ -37,7 +37,7 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <div class="navbar-nav ml-auto">
                     {% if user.is_authenticated %}
-                        <p class="p-2 text-dark mr-4">Welcome {{ user.username }}</p>
+                        <p class="p-2 text-dark mr-5">Welcome {{ user.username }}</p>
                         <a class="p-2 text-dark nav-link" href="{% url 'cart' %}">Cart</a>
                         <a class="p-2 text-dark nav-link" href="{% url 'my-orders' %}">My orders</a>
                         <a class="p-2 text-dark nav-link" href="{% url 'logout' %}">Logout</a>

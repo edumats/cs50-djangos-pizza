@@ -87,20 +87,32 @@ def check_price(request):
                     'success': False,
                     'message': 'Product not found'
                 })
-        else:
-            # Used for categories that already has defined a slug
-            # aka not customizable products
+        elif data.get('category') == 'Salad':
             try:
-                product = Product.objects.get(name=data.get('product'))
+                product = Salad.objects.get(name=data.get('product'))
+                type = Salad.objects.get(name=data.get('product'))
+                print(f'Product {product} - Image {type.image}')
             except ObjectDoesNotExist:
                 return JsonResponse({
                     'success': False,
                     'message': 'Product not found'
                 })
+        elif data.get('category') == 'Pasta':
+            try:
+                product = Pasta.objects.get(name=data.get('product'))
+                type = Pasta.objects.get(name=data.get('product'))
+                print(product)
+            except ObjectDoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Product not found'
+                })
+
     return JsonResponse({
         'price': product.price,
         'slug': product.slug ,
         'name': product.name,
+        'image': type.image,
         'success':True
     })
 
