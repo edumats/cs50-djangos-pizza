@@ -9,10 +9,11 @@ class Product(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     # for the django-model-utils InheritanceManager to work
+    # https://django-model-utils.readthedocs.io/en/latest/managers.html#inheritancemanager
     objects = InheritanceManager()
 
-    # for the downcast function to work
-    _downcast = None
+    # # for the downcast function to work
+    # _downcast = None
 
     def __str__(self):
         return f"{self.name}"
@@ -20,13 +21,13 @@ class Product(models.Model):
     def get_absolute(self):
         return f"/products/{self.slug}"
 
-    # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
-    def downcast(self):
-        if self._downcast is None:
-            if hasattr(self, 'sub'):
-                self._downcast = self.sub
-
-        return self._downcast
+    # # used downcast function https://stackoverflow.com/questions/28822065/access-child-methods-in-python-django
+    # def downcast(self):
+    #     if self._downcast is None:
+    #         if hasattr(self, 'sub'):
+    #             self._downcast = self.sub
+    #
+    #     return self._downcast
 
 
 class Dinner(Product):

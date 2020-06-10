@@ -30,8 +30,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
-    'polymorphic',
+INSTALLED_APPS = [ 
     'carts.apps.CartsConfig',
     'orders.apps.OrdersConfig',
     'users.apps.UsersConfig',
