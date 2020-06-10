@@ -137,6 +137,9 @@ const Cart = {
         let alertElement = document.getElementById('alertMessage');
         alertElement.textContent = message;
 
+        // Scrools page to top
+        window.scrollTo(0, 0);
+
         // Alert fades away after 3 seconds
         $('#alertSystem').fadeTo(1, 1).show();
         setTimeout(function() {
@@ -153,6 +156,7 @@ const Cart = {
         console.log('Empty cart');
         this.syncOrders([]);
         document.querySelector('#order-details').innerHTML = '';
+        document.querySelector('#order-total').innerHTML = '';
         this.showCart();
     },
     showCart() {

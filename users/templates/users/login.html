@@ -5,14 +5,21 @@
 {% endblock %}
 
 {% block body %}
-    <form method="POST">
-        {% csrf_token %}
-        <div class="form-group">
-            {{ form|crispy }}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 mt-4 mx-5">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form|crispy }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <small class="text-muted">
+                    Don't have an account? <a href="{% url 'register' %}">Register here</a>
+                </small>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Login</button>
-    </form>
-    <small class="text-muted">
-        Don't have an account? <a href="{% url 'register' %}">Register here</a>
-    </small>
+    </div>
+
 {% endblock %}

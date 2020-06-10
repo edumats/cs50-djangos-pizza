@@ -124,8 +124,7 @@ const Cart = {
                         if (this.checkPizzaToppings()) {
                             let price = document.querySelector('#price').innerHTML;
                             Cart.setStorage(serverResponse.slug, price, serverResponse.name);
-                            // Scrolls to top of page
-                            window.scrollTo(0, 0);
+
                             Cart.displayAlert('Product added to cart')
                         } else {
                             Cart.displayAlert('Please remove one or more toppings to place the order')
@@ -134,8 +133,7 @@ const Cart = {
                         // For other product categories
                         let price = document.querySelector('#price').innerHTML;
                         Cart.setStorage(serverResponse.slug, price, serverResponse.name);
-                        // Scrolls to top of page
-                        window.scrollTo(0, 0);
+
                         Cart.displayAlert('Product added to cart')
                     }
 
@@ -240,6 +238,9 @@ const Cart = {
         // Display alert in page
         let alertElement = document.getElementById('alertMessage');
         alertElement.textContent = message;
+        
+        // Scrolls to top of page
+        window.scrollTo(0, 0);
 
         // Alert fades away after 3 seconds
         $('#alertSystem').fadeTo(1, 1).show();
