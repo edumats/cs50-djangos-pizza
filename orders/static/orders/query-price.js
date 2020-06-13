@@ -16,6 +16,7 @@ const Cart = {
         const data = {};
 
         // Category and product are hidden in html and are used for simplyfying the queries to server
+        // Those are used in the Ajax calls
         const category = document.getElementById('category').textContent;
         const product = document.getElementById('product').textContent;
 
@@ -51,6 +52,8 @@ const Cart = {
             this.displayPizzaToppingMessage();
         }
 
+        // Set event listener for send order button clicks
+        this.sendOrder(data['category'])
 
         // If select box changes, update object and query again for price
         document.querySelectorAll('select').forEach(item => {
@@ -62,6 +65,34 @@ const Cart = {
                 data[item.name] = item.value;
                 this.requestAjax(data);
             };
+        });
+    },
+    sendOrder(category) {
+        let submitButton = document.querySelector('#order-button');
+        // Add slug and quantity to localStorage when submit button is clicked
+        submitButton.addEventListener('click', event => {
+            console.log('Adding event listener')
+            // Prevents page from reloading
+            event.preventDefault();
+
+            // Retrieve data from buttom element, who stored data from last Ajax call
+            const slug = submitButton.dataset.slug;
+            const name = submitButton.dataset.name;
+            const price = submitButton.dataset.price;
+            // If product is Pizza
+            if (category === 'Pizza') {
+                // Check if number of toppings corresponds to number of allowed toppings
+                if (Cart.checkPizzaToppings()) {
+                    Cart.setStorage(slug, price, name);
+                    Cart.displayAlert('Pizza added to cart')
+                } else {
+                    Cart.displayAlert('Please check the number of toppings to continue')
+                }
+            } else {
+                // For other product categories
+                Cart.setStorage(slug, price, name);
+                Cart.displayAlert('Product added to cart')
+            }
         });
     },
     // Gets data from local storage, converts to Json and stores in orders. If no localStorage, display message
@@ -94,51 +125,27 @@ const Cart = {
             const serverResponse = JSON.parse(request.responseText);
 
             if (serverResponse.success) {
+                const submitButton = document.querySelector('#order-button');
                 console.log(`Server returned: ${serverResponse.image}`);
                 // Adds price to submit button
                 content = `${serverResponse.price}`;
                 document.querySelector('#price').innerHTML = content;
 
+                // Store data in button element for later use
+                submitButton.setAttribute('data-name', serverResponse.name);
+                submitButton.setAttribute('data-slug', serverResponse.slug);
+                submitButton.setAttribute('data-price', serverResponse.price);
+
                 // Sets product image
                 this.setProductImage(serverResponse.image);
 
                 // Add action url to form
-                // document.querySelector('#order-form').action = `../../cart/add/${serverResponse.slug}`;
                 document.querySelector('#order-form').action = '#';
-
-                let submitButton = document.querySelector('#order-button');
 
                 if (data['category'] === 'Sub') {
                     // Rechecks if toppings are selected, updates price
                     this.priceToppings();
                 }
-
-                // Add slug and quantity to localStorage when submit button is clicked
-                submitButton.addEventListener('click', event => {
-                    // Prevents page from reloading
-                    event.preventDefault();
-
-                    // If product is Pizza
-                    if (data['category'] === 'Pizza') {
-                        // Check if number of toppings corresponds to number of allowed toppings
-                        if (this.checkPizzaToppings()) {
-                            let price = document.querySelector('#price').innerHTML;
-                            Cart.setStorage(serverResponse.slug, price, serverResponse.name);
-
-                            Cart.displayAlert('Product added to cart')
-                        } else {
-                            Cart.displayAlert('Please remove one or more toppings to place the order')
-                        }
-                    } else {
-                        // For other product categories
-                        let price = document.querySelector('#price').innerHTML;
-                        Cart.setStorage(serverResponse.slug, price, serverResponse.name);
-
-                        Cart.displayAlert('Product added to cart')
-                    }
-
-
-                });
 
                 // Enables form to send data again, if blocked before
                 document.querySelector('#order-form').onsubmit = e => {
@@ -146,7 +153,6 @@ const Cart = {
                 };
             }
             else {
-                console.log('Product not found');
                 // Insert error message in button
                 document.querySelector('#price').innerHTML = 'Error retrieving price';
 
@@ -163,7 +169,7 @@ const Cart = {
         }
 
         console.log(`Sending to server: ${data.category},  ${data.size} and ${data.product}`)
-        // Sends data to server
+        // Requests price information to server
         request.send(JSON.stringify(data));
     },
     // Get CSRF token from cookie
@@ -190,20 +196,21 @@ const Cart = {
         let selectedToppings = Cart.addToppings();
 
         // Find if order with the same slug and toppings exists
+        // Returns the product as a object, if exists, returns undefined if not
         let containsOrder = Cart.containsItem(slug, selectedToppings);
 
-        // Change if condition, as it is evaluating trueness of an object
-        if (containsOrder) {
-            // If order exists, just add to quantity
+        console.log(`Type of containsOrder is ${typeof containsOrder}`)
 
-            Cart.orders.forEach(order => {
-                console.log("Adding to existing order")
-                order.quantity += quantity;
-                Cart.saveOrder();
-            })
+        // If containsOrder returns 0 or higher number, an exact product already exists in cart
+        if (containsOrder >= 0) {
+            // If order exists, just add to quantity
+            console.log('Adding to existing order')
+            // Find the existing product in cart by its index, sum to the existing quantity
+            Cart.orders[containsOrder]['quantity'] += quantity;
+            Cart.saveOrder();
 
         } else {
-            // If order do not exist, create new order
+            // If order do not exist, containsOrder will return -1
             console.log('creating new order')
 
             let order = {
@@ -224,7 +231,7 @@ const Cart = {
         let toppings = document.querySelectorAll('.form-check-input');
         let filtered = toppings.forEach(topping => {
             if (topping.checked) {
-                console.log('Adding topping')
+                // If a topping checkbox is checked, add to array
                 resultArr.push(topping.value);
             }
         })
@@ -232,13 +239,13 @@ const Cart = {
     },
     containsItem(slug, toppings) {
         // Checks if Cart.orders contains a slug and exact array of toppings, if yes, returns true, otherwise, false
-        return Cart.orders.some(order => order.slug === slug && JSON.stringify(order.toppings) === JSON.stringify(toppings))
+        return Cart.orders.findIndex(order => order.slug === slug && JSON.stringify(order.toppings) === JSON.stringify(toppings))
     },
     displayAlert(message) {
         // Display alert in page
         let alertElement = document.getElementById('alertMessage');
         alertElement.textContent = message;
-        
+
         // Scrolls to top of page
         window.scrollTo(0, 0);
 
@@ -293,11 +300,14 @@ const Cart = {
             })
         }
     },
+    // Given a Pizza type, check if user has selected the exact number of allowed toppings
     checkPizzaToppings() {
+        // Get the number of toppings for a given Pizza type
         let max = this.maxToppings();
+        // Get the topping checkboxes that are checked
         checkedToppings = document.querySelectorAll('.form-check-input:checked');
-        if (checkedToppings.length > max) {
-            this.displayAlert('Maximum number of toppings reached')
+        // If not exact number of toppings, return false
+        if (checkedToppings.length > max || checkedToppings.length < max) {
             return false;
         }
         return true;
